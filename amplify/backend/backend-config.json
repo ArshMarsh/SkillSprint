@@ -1,0 +1,43 @@
+{
+  "api": {
+    "quizFlow": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "quizFlow"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
+  "function": {
+    "quizFlow": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_quizFlow_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "quizFlow"
+        }
+      ]
+    },
+    "AMPLIFY_function_quizFlow_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "quizFlow"
+        }
+      ]
+    }
+  }
+}

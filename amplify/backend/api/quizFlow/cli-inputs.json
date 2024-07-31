@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": {
+    "/quizFlow/{id}": {
+      "name": "/quizFlow/{id}",
+      "lambdaFunction": "quizFlow",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}
