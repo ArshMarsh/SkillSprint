@@ -16,7 +16,8 @@
         "quizFlow": {
           "deploymentBucketName": "amplify-skillsprintback-dev-dffbf-deployment",
           "s3Key": "amplify-builds/quizFlow-61515251636b30752f34-build.zip"
-        }
+        },
+        "testfunc": {}
       },
       "api": {
         "quizFlow": {}
