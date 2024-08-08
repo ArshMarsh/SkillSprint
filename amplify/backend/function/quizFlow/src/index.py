@@ -145,7 +145,7 @@ def handler(event, context):
                 'title': roadmap_skeleton['title'],
                 'description': roadmap_skeleton['description'],
                 'phases': [phase],  # Correctly format phases
-                "goal": event["goal"],
+                'goal': event['goal'],
                 'currentSkillLevel': input_data['currentSkillLevel'],
                 'desiredSkillLevel': input_data['desiredSkillLevel']
             }
