@@ -129,7 +129,7 @@ Only return a valid JSON, with proper delimitors and characters
 """
 #Claude gives misformatted JSON if Response Character count goes upto 19000
 
-def lambda_handler(event, context):
+def handler(event, context):
     try:
 
         # Create a Bedrock Runtime client
