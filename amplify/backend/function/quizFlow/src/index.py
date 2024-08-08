@@ -6,8 +6,7 @@ import re
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
-
+# Define your prompts as strings
 PROMPT_SKELETON = """
 <TASK>
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
@@ -23,14 +22,13 @@ estimatedLearningDuration (string): The expected time to complete the learning p
 
 <OUTPUT>
 title: The title of the learning roadmap taken from INPUT (Dont includes "learning path" in this title)
-description:  A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
+description: A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
 imageURL: A URL linking to an image online that can be used as the cover for this learning roadmap.
 phases: Array of objects. Each object represents a phase in the learning roadmap. Atleast 2.
 phaseDescription: Describes what the phase entails.
 topics: Array of objects. Each object represents a topic within the phase. Atleast 3.
-topicName:  The name of the topic.
+topicName: The name of the topic.
 topicOutline: Array of strings. Detailed points covering what the topic includes. Atleast 4-5 strings
-
 <JSON_Structure>
 {title: string,
 description: string,
@@ -50,21 +48,21 @@ Only return a valid JSON
 <IMPORTANT/>
 """
 
-PROMPT_INFOBIT= """
+PROMPT_INFOBIT = """
 <TASK>
 You are an education expert assigned to develop a personalized learning path aimed at helping users acquire specific skills. Your main task involves analyzing an input tree of a learning path. Based on this analysis, you are to create "infobits" for each topic outlined in the tree. Infobits are concise pieces of information designed to be easily digestible by users. You are required to generate 4-5 infobits for each topicOutline. Each infobit should include a short text explaining the topic outline, along with relevant keywords extracted from this text. Additionally, optionally add an example in each infobit wherever an example would help explaining the infobit.
 <TASK/>
 
 <INPUT>
 title: The title of the learning roadmap.
-description:  A detailed description explaining the content covered in the roadmap
+description: A detailed description explaining the content covered in the roadmap
 goal (string): The objective the user hopes to achieve after completing the learning roadmap.
 currentSkillLevel (string): The user's initial proficiency in the skill.
 desiredSkillLevel (string): The proficiency level the user aims to reach.
 phases: Array of objects. Each object represents a phase in the learning roadmap.
 phaseDescription: Describes what the phase entails.
 topics: Array of objects. Each object represents a topic within the phase. 
-topicName:  The name of the topic.
+topicName: The name of the topic.
 topicOutline: Array of strings. Detailed points covering what the topic includes.
 <INPUT/>
 
@@ -72,20 +70,19 @@ topicOutline: Array of strings. Detailed points covering what the topic includes
 phases: Array of objects. Each object represents a phase in the learning roadmap. Use original input structure
 phaseDescription: Describes what the phase entails.
 topics: Array of objects. Each object represents a topic within the phase. Use original input structure
-topicName:  The name of the topic.
+topicName: The name of the topic.
 infoBits: Array of objects. Each object represents an infobit for the topic.
 text: A string containing information or an explanation about the topic, derived from the topic outline.
 keywords: Array of strings, comprising keywords extracted from the text. Maximum 5 keywords.
 example: Optional string, providing an example to better explain the content in the text.
-
 <JSON_Structure>
 phases: [{
 "phaseDescription": string,
 "topics": [{
 "topicName": string,
 "infoBits": [
-"text": string
-"keywords" :string[]
+"text": string,
+"keywords": string[],
 "example": Optional(string)
 ],}]}]}
 <JSON_Structure/>
@@ -97,13 +94,7 @@ Only return a valid JSON, with proper delimitors and characters
 
 PROMPT_QUIZ = """
 <TASK>
-You are an educational content generator. Based on the learning roadmap and infobit content provided, 
-create a set of quizzes for each phase and topic. 
-The quizzes should test the knowledge and understanding of the content covered. use your own knowledge 
-to make relavent quizes to the content provided. the quizes should be complex depending on the
-phase, currentskilllevel of user, desiredskilllevel of user, and learningduration. The quizzes can use 
-variations of the words from the topic and keywords and deviate.
-Use various question types such as multiple-choice, true or false, and short-answer questions.
+You are an educational content generator. Based on the learning roadmap and infobit content provided, create a set of quizzes for each phase and topic. The quizzes should test the knowledge and understanding of the content covered. Use your own knowledge to make relevant quizzes to the content provided. The quizzes should be complex depending on the phase, current skill level of user, desired skill level of user, and learning duration. The quizzes can use variations of the words from the topic and keywords and deviate. Use various question types such as multiple-choice, true or false, and short-answer questions.
 <TASK/>
 
 <INPUT>
@@ -127,12 +118,10 @@ answer: The correct answer.
 Only return a valid JSON, with proper delimitors and characters
 <IMPORTANT/>
 """
-#Claude gives misformatted JSON if Response Character count goes upto 19000
 
 def handler(event, context):
+    # Create a Bedrock Runtime client
     try:
-
-        # Create a Bedrock Runtime client
         bedrock = boto3.client(
             service_name='bedrock-runtime',
             region_name='eu-central-1'  # Frankfurt region
@@ -140,6 +129,7 @@ def handler(event, context):
 
         input_data = json.loads(json.dumps(event))
 
+        # Generate the initial roadmap skeleton
         roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
         phase_count = len(roadmap_skeleton['phases'])
         logging.info(f"Roadmap Skeleton Generated Successfully with {phase_count} Phases")
@@ -148,57 +138,55 @@ def handler(event, context):
         counter = 1
 
         for phase in roadmap_skeleton['phases']:
-
+            # Prepare input for Infobit generation
             input_infobit = {
                 'title': roadmap_skeleton['title'],
                 'description': roadmap_skeleton['description'],
-                'phases': phase,
+                'phases': [phase],  # Correctly format phases
                 'goal': input_data['goal'],
                 'currentSkillLevel': input_data['currentSkillLevel'],
                 'desiredSkillLevel': input_data['desiredSkillLevel']
             }
             
             infobit_roadmap = sonnect_api_call(bedrock, PROMPT_INFOBIT, input_infobit)
-            phases.extend(infobit_roadmap)
+            phases.extend(infobit_roadmap['phases'])
             logging.info(f"Roadmap InfoBits Generated Successfully for Phase {counter}")
             counter += 1
 
         logging.info("Roadmap InfoBits Generated Successfully")
 
+        # Append infobits to the roadmap
         appended_roadmap = {
             'title': roadmap_skeleton['title'],
             'description': roadmap_skeleton['description'],
-            "imageURL": roadmap_skeleton['imageURL'],
-                **input_data, 
-            'phases': phases,
+            'imageURL': roadmap_skeleton['imageURL'],
+            'phases': phases
         }
 
-        final_result = enhance_roadmap(appended_roadmap)
+        final_result = appended_roadmap
 
         logging.info("Base Roadmap Generated Successfully")
-
+        
+        # Generate quizzes based on the roadmap and infobits
         quiz_input = {
-        'title': final_result['title'],
-        'description': final_result['description'],
-        'phases': final_result['phases']
+            'title': final_result['title'],
+            'description': final_result['description'],
+            'phases': final_result['phases']
         }
 
         quizzes = sonnect_api_call(bedrock, PROMPT_QUIZ, quiz_input)
-
+        
+        # Ensure quizzes are correctly included in final results
         final_result['quizzes'] = quizzes['quizzes']
 
         logging.info("Quizzes Generated Successfully")
+        
         return {
             'statusCode': 200,
-            'body': final_result
+            'body': json.dumps(final_result)
         }
-
     except Exception as e:
-        logger.error(f"Error: While generating roadmap: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+        logger.error(f"Error: while generating roadmap {str(e)}")
 
 def sonnect_api_call(bedrock, prompt, input_data):
     try:
@@ -243,7 +231,7 @@ def extract_json(response):
         json_start = response.index("{")
         json_end = response.rfind("}")
         string_result = response[json_start:json_end + 1]
-        result =  json.loads(string_result)
+        result = json.loads(string_result)
         
         return result
     except Exception as e:
@@ -261,7 +249,7 @@ def extract_json(response):
                 json_start = response.index("{")
                 json_end = response.rfind("}")
                 string_result = response[json_start:json_end + 1]
-                result =  json.loads(string_result)
+                result = json.loads(string_result)
             except Exception as ex:
                 # If there's still an error, return a message
                 logger.error(f"Error: While parsing JSON after fix: {str(ex)}")
@@ -270,7 +258,7 @@ def extract_json(response):
         else:
             # logger.error(f"string_result = {str(string_result)[char_position-10:char_position+10]}")
             raise 
-        
+
 def enhance_roadmap(json_input):
     # Load the input JSON into a Python dictionary if it's a string
     if isinstance(json_input, str):
@@ -279,18 +267,33 @@ def enhance_roadmap(json_input):
         data = json_input
     
     phase_count = len(data['phases'])
-    data['PhaseCount'] = phase_count
+    data['PhaseCount'] = str(phase_count)
     
     for i, phase in enumerate(data['phases'], start=1):
-        phase['PhaseNumber'] = i
+        if not isinstance(phase, dict):
+            phase = dict(phase)
+        phase['PhaseNumber'] = str(i)
         
-        topic_count = len(phase['topics'])
+        topics = phase.get('topics', [])
+        if not isinstance(topics, list):
+            topics = [dict(topics)]
+        
+        topic_count = len(topics)
         phase['TopicCount'] = topic_count
         
-        for j, topic in enumerate(phase['topics'], start=1):
-            topic['TopicNumber'] = j
+        for j, topic in enumerate(topics, start=1):
+            if not isinstance(topic, dict):
+                topic = dict(topic)
+            topic['TopicNumber'] = str(j)
             
-            infobit_count = len(topic['infoBits'])
-            topic['InfobitCount'] = infobit_count
+            info_bits = topic.get('infoBits', [])
+            if not isinstance(info_bits, list):
+                info_bits = [dict(info_bits)]
+                
+            infobit_count = len(info_bits)
+            topic['InfobitCount'] = str(infobit_count)
             
+        phase['topics'] = topics  
+    
     return data
+
