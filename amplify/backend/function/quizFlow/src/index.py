@@ -6,11 +6,10 @@ import re
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-#Claude gives misformatted JSON if Response Character count goes upto 19000
 
-def lambda_handler(event, context):
-    PROMPT_SKELETON = """
-    <TASK>
+
+PROMPT_SKELETON = """
+<TASK>
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
 <TASK/>
 
@@ -34,14 +33,14 @@ topicOutline: Array of strings. Detailed points covering what the topic includes
 
 <JSON_Structure>
 {title: string,
-  description: string,
-  imageURL: string,
-  phases: [{
-      phaseDescription: string,
-      topics: [{
-          topicName: string,
-          topicOutline: [
-            string ],
+description: string,
+imageURL: string,
+phases: [{
+phaseDescription: string,
+topics: [{
+topicName: string,
+topicOutline: [
+string ],
 }]}]}
 <JSON_Structure/>
 <OUTPUT/>
@@ -49,10 +48,10 @@ topicOutline: Array of strings. Detailed points covering what the topic includes
 <IMPORTANT>
 Only return a valid JSON 
 <IMPORTANT/>
-    """
-    
-    PROMPT_INFOBIT= """
-    <TASK>
+"""
+
+PROMPT_INFOBIT= """
+<TASK>
 You are an education expert assigned to develop a personalized learning path aimed at helping users acquire specific skills. Your main task involves analyzing an input tree of a learning path. Based on this analysis, you are to create "infobits" for each topic outlined in the tree. Infobits are concise pieces of information designed to be easily digestible by users. You are required to generate 4-5 infobits for each topicOutline. Each infobit should include a short text explaining the topic outline, along with relevant keywords extracted from this text. Additionally, optionally add an example in each infobit wherever an example would help explaining the infobit.
 <TASK/>
 
@@ -80,14 +79,14 @@ keywords: Array of strings, comprising keywords extracted from the text. Maximum
 example: Optional string, providing an example to better explain the content in the text.
 
 <JSON_Structure>
-  phases: [{
-      "phaseDescription": string,
-      "topics": [{
-          "topicName": string,
-          "infoBits": [
-            "text": string
-            "keywords" :string[]
-            "example": Optional(string)
+phases: [{
+"phaseDescription": string,
+"topics": [{
+"topicName": string,
+"infoBits": [
+"text": string
+"keywords" :string[]
+"example": Optional(string)
 ],}]}]}
 <JSON_Structure/>
 <OUTPUT/>
@@ -115,38 +114,41 @@ phases: Array of objects. Each object represents a phase in the roadmap with top
 
 <OUTPUT>
 quizzes: Array of objects. Each object represents a quiz for a specific phase.
-  phase: The name of the phase.
-  topics: Array of objects. Each object represents a topic within the phase.
-    topicName: The name of the topic.
-    questions: Array of objects. Each object represents a question.
-      question: The text of the question.
-      type: The type of the question (e.g., multiple-choice, true-false, short-answer).
-      options: Array of strings (for multiple-choice questions).
-      answer: The correct answer.
+phase: The name of the phase.
+topics: Array of objects. Each object represents a topic within the phase.
+topicName: The name of the topic.
+questions: Array of objects. Each object represents a question.
+question: The text of the question.
+type: The type of the question (e.g., multiple-choice, true-false, short-answer).
+options: Array of strings (for multiple-choice questions).
+answer: The correct answer.
 <OUTPUT/>
 <IMPORTANT>
 Only return a valid JSON, with proper delimitors and characters
 <IMPORTANT/>
 """
+#Claude gives misformatted JSON if Response Character count goes upto 19000
+
+def lambda_handler(event, context):
     try:
-        
+
         # Create a Bedrock Runtime client
         bedrock = boto3.client(
             service_name='bedrock-runtime',
             region_name='eu-central-1'  # Frankfurt region
         )
-        
+
         input_data = json.loads(json.dumps(event))
-        
+
         roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
         phase_count = len(roadmap_skeleton['phases'])
         logging.info(f"Roadmap Skeleton Generated Successfully with {phase_count} Phases")
-        
+
         phases = []
         counter = 1
-        
+
         for phase in roadmap_skeleton['phases']:
-        
+
             input_infobit = {
                 'title': roadmap_skeleton['title'],
                 'description': roadmap_skeleton['description'],
@@ -160,44 +162,44 @@ Only return a valid JSON, with proper delimitors and characters
             phases.extend(infobit_roadmap)
             logging.info(f"Roadmap InfoBits Generated Successfully for Phase {counter}")
             counter += 1
-        
+
         logging.info("Roadmap InfoBits Generated Successfully")
-        
+
         appended_roadmap = {
             'title': roadmap_skeleton['title'],
             'description': roadmap_skeleton['description'],
             "imageURL": roadmap_skeleton['imageURL'],
-             **input_data, 
+                **input_data, 
             'phases': phases,
         }
-        
+
         final_result = enhance_roadmap(appended_roadmap)
-        
+
         logging.info("Base Roadmap Generated Successfully")
 
-         quiz_input = {
-            'title': final_result['title'],
-            'description': final_result['description'],
-            'phases': final_result['phases']
+        quiz_input = {
+        'title': final_result['title'],
+        'description': final_result['description'],
+        'phases': final_result['phases']
         }
-        
+
         quizzes = sonnect_api_call(bedrock, PROMPT_QUIZ, quiz_input)
 
         final_result['quizzes'] = quizzes['quizzes']
-        
+
         logging.info("Quizzes Generated Successfully")
         return {
             'statusCode': 200,
             'body': final_result
         }
-    
+
     except Exception as e:
         logger.error(f"Error: While generating roadmap: {str(e)}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
-        
+
 def sonnect_api_call(bedrock, prompt, input_data):
     try:
         request_body = {
