@@ -231,100 +231,107 @@ PROMPT_QUIZ_LAST = """
 #Claude gives misformatted JSON if Response Character count goes upto 19000
 
 def handler(event, context):
-    bedrock = boto3.client(
-        service_name='bedrock-runtime',
-        region_name='eu-central-1'  
-    )
-    
-    input_data = json.loads(event['body'])
-    
-    roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
-    phase_count = len(roadmap_skeleton['phases'])
-    logging.info(f"Roadmap Skeleton Generated Successfully with {phase_count} Phases")
-    
-    phases = []
-    counter = 1
-    
-    for phase in roadmap_skeleton['phases']:
-    
-        input_infobit = {
+    try:
+        bedrock = boto3.client(
+            service_name='bedrock-runtime',
+            region_name='eu-central-1'  
+        )
+        
+        input_data = json.loads(event['body'])
+        
+        roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
+        phase_count = len(roadmap_skeleton['phases'])
+        logging.info(f"Roadmap Skeleton Generated Successfully with {phase_count} Phases")
+        
+        phases = []
+        counter = 1
+        
+        for phase in roadmap_skeleton['phases']:
+        
+            input_infobit = {
+                'title': roadmap_skeleton['title'],
+                'description': roadmap_skeleton['description'],
+                'phases': phase,
+                'goal': input_data['goal'],
+                'currentSkillLevel': input_data['currentSkillLevel'],
+                'desiredSkillLevel': input_data['desiredSkillLevel']
+            }
+            
+            infobit_roadmap = sonnect_api_call(bedrock, PROMPT_INFOBIT, input_infobit)
+            phases.extend(infobit_roadmap['phases'])
+            logging.info(f"Roadmap InfoBits Generated Successfully for Phase {counter}")
+            counter += 1
+        
+        logging.info("Roadmap InfoBits Generated Successfully")
+        
+        appended_roadmap = {
             'title': roadmap_skeleton['title'],
             'description': roadmap_skeleton['description'],
-            'phases': phase,
-            'goal': input_data['goal'],
-            'currentSkillLevel': input_data['currentSkillLevel'],
-            'desiredSkillLevel': input_data['desiredSkillLevel']
-        }
-        
-        infobit_roadmap = sonnect_api_call(bedrock, PROMPT_INFOBIT, input_infobit)
-        phases.extend(infobit_roadmap['phases'])
-        logging.info(f"Roadmap InfoBits Generated Successfully for Phase {counter}")
-        counter += 1
-    
-    logging.info("Roadmap InfoBits Generated Successfully")
-    
-    appended_roadmap = {
-        'title': roadmap_skeleton['title'],
-        'description': roadmap_skeleton['description'],
-        "imageURL": roadmap_skeleton['imageURL'],
-        'estimatedLearningDuration':  input_data['estimatedLearningDuration'],
-        'goal': input_data['goal'],
-        'currentSkillLevel': input_data['currentSkillLevel'],
-        'desiredSkillLevel': input_data['desiredSkillLevel'],
-        'currentLesson': 1,
-        'currentPhase': 1,
-        'dailyTime': input_data['desiredSkillLevel'],
-        'phases': phases,
-    }
-    
-    enhanced_roadmap = enhance_roadmap(appended_roadmap)
-    for phase in enhanced_roadmap['phases']:
-        input_quiz = {
-            'skillName': input_data['skillName'],
+            "imageURL": roadmap_skeleton['imageURL'],
+            'estimatedLearningDuration':  input_data['estimatedLearningDuration'],
             'goal': input_data['goal'],
             'currentSkillLevel': input_data['currentSkillLevel'],
             'desiredSkillLevel': input_data['desiredSkillLevel'],
-            'estimatedLearningDuration': input_data['estimatedLearningDuration'],
-            'phaseDescription': phase['phaseDescription'],
-            'topics': phase['topics'],
+            'currentLesson': 1,
+            'currentPhase': 1,
+            'dailyTime': input_data['desiredSkillLevel'],
+            'phases': phases,
         }
         
-        quiz_data = sonnect_api_call(bedrock, PROMPT_QUIZ, input_quiz)
-        
-        # Merge the quizzes with the infobits in the phase
-        for topic_index, topic in enumerate(phase['topics']):
-            for infobit_index, infobit in enumerate(topic['infoBits']):
-                infobit['quiz'] = quiz_data['topics'][topic_index]['quizzes'][infobit_index]
-    
-    logging.info("Quizzes Generated Successfully")
-    
-    last_quiz = sonnect_api_call(bedrock, PROMPT_QUIZ_LAST, enhanced_roadmap)
-    final_phase = {
-            "phaseDescription": "Final Assessment: A comprehensive test covering all topics and phases.",
-            "phaseNumber": len(enhanced_roadmap['phases']) + 1,
-            "topicCount": len(last_quiz['quizzes']),
-            "topics": []
-        }
-        
-    final_topic = {
-        "topicName": "Final Comprehensive Quiz",
-        "topicNumber": "LAST",
-        "infobitCount": len(last_quiz['quizzes']),
-        "infoBits": [],
-        "quizzes": last_quiz['quizzes']
-    }
-        
-    final_phase['topics'].append(final_topic)
-    
-    enhanced_roadmap['phases'].append(final_phase)
+        enhanced_roadmap = enhance_roadmap(appended_roadmap)
+        for phase in enhanced_roadmap['phases']:
+            input_quiz = {
+                'skillName': input_data['skillName'],
+                'goal': input_data['goal'],
+                'currentSkillLevel': input_data['currentSkillLevel'],
+                'desiredSkillLevel': input_data['desiredSkillLevel'],
+                'estimatedLearningDuration': input_data['estimatedLearningDuration'],
+                'phaseDescription': phase['phaseDescription'],
+                'topics': phase['topics'],
+            }
             
-    logging.info("Final Roadmap Generated Successfully")
-    
-    return {
-        'statusCode': 200,
-        'body': enhanced_roadmap
-    }
-
+            quiz_data = sonnect_api_call(bedrock, PROMPT_QUIZ, input_quiz)
+            
+            # Merge the quizzes with the infobits in the phase
+            for topic_index, topic in enumerate(phase['topics']):
+                for infobit_index, infobit in enumerate(topic['infoBits']):
+                    infobit['quiz'] = quiz_data['topics'][topic_index]['quizzes'][infobit_index]
+        
+        logging.info("Quizzes Generated Successfully")
+        
+        last_quiz = sonnect_api_call(bedrock, PROMPT_QUIZ_LAST, enhanced_roadmap)
+        final_phase = {
+                "phaseDescription": "Final Assessment: A comprehensive test covering all topics and phases.",
+                "phaseNumber": len(enhanced_roadmap['phases']) + 1,
+                "topicCount": len(last_quiz['quizzes']),
+                "topics": []
+            }
+            
+        final_topic = {
+            "topicName": "Final Comprehensive Quiz",
+            "topicNumber": "LAST",
+            "infobitCount": len(last_quiz['quizzes']),
+            "infoBits": [],
+            "quizzes": last_quiz['quizzes']
+        }
+            
+        final_phase['topics'].append(final_topic)
+        
+        enhanced_roadmap['phases'].append(final_phase)
+                
+        logging.info("Final Roadmap Generated Successfully")
+        
+        return {
+            'statusCode': 200,
+            'body': enhanced_roadmap
+        }
+        
+    except Exception as e:
+        logger.error(f"Error: While generating roadmap: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
 
         
 def sonnect_api_call(bedrock, prompt, input_data):
@@ -431,42 +438,3 @@ def enhance_roadmap(json_input):
         logger.error(f"Error: While adding phase counts to roadmap: {str(ex)}")
         raise
 
-
-
-event = {
-    "body": json.dumps({
-        "skillName": "Web Development",
-        "goal": "Build a fully functional e-commerce website.",
-        "currentSkillLevel": "Beginner",
-        "desiredSkillLevel": "Intermediate",
-        "estimatedLearningDuration": "6 months"
-    }),
-    "headers": {
-        "Content-Type": "application/json"
-    },
-    "httpMethod": "POST",
-    "path": "/generate-roadmap",
-    "queryStringParameters": {},
-    "requestContext": {
-        "resourceId": "123456",
-        "resourcePath": "/generate-roadmap",
-        "httpMethod": "POST",
-        "extendedRequestId": "abc123",
-        "requestTime": "11/Aug/2024:19:13:55 +0000",
-        "path": "/generate-roadmap",
-        "accountId": "123456789012",
-        "protocol": "HTTP/1.1",
-        "stage": "dev",
-        "domainPrefix": "api",
-        "requestTimeEpoch": 1597322493000,
-        "requestId": "c3e74cd2-df39-4ec4-a9b1-6f0dcd274f2f",
-        "identity": {
-            "sourceIp": "123.45.67.89",
-            "userAgent": "Custom User Agent String"
-        },
-        "domainName": "api.example.com",
-        "apiId": "1234567890"
-    },
-    "isBase64Encoded": False
-}
-print(handler(event, ""))
