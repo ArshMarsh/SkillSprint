@@ -1,8 +1,14 @@
 import json
+from googlesearch import search
+
 
 def handler(event, context):
-  print('received event:')
-  print(event)
+    query = "python programming"
+    searchs = search(query, num_results=5, advanced=True, lang="en")
+
+    testret = {}
+    for i, result in enumerate(searchs):
+        testret[i] = result
   
   return {
       'statusCode': 200,
@@ -11,5 +17,5 @@ def handler(event, context):
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
       },
-      'body': json.dumps("henlo")
+      'body': json.dumps(testret)
   }
