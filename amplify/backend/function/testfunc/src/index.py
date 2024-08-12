@@ -4,7 +4,7 @@ from googlesearch import search
 
 def handler(event, context):
     query = "python programming"
-    searchs = search(query, num_results=5, advanced=True, lang="en")
+    search_results = search(query, num_results=5, advanced=True, lang="en")
 
     testret = {}
     for i, result in enumerate(search_results):
