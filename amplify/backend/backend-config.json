@@ -1,5 +1,19 @@
 {
   "api": {
+    "api41f545bd": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    },
     "quizFlow": {
       "dependsOn": [
         {
@@ -30,6 +44,11 @@
     }
   },
   "function": {
+    "infiniteLambda": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "quizFlow": {
       "build": true,
       "providerPlugin": "awscloudformation",
