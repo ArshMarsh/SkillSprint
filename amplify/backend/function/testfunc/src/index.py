@@ -1,6 +1,17 @@
 import json
 from googlesearch import search
 
+import requests
+
+def get_public_ip():
+    try:
+        response = requests.get('https://api.ipify.org?format=json')
+        response.raise_for_status()
+        ip_address = response.json().get('ip')
+        return ip_address
+    except requests.RequestException as e:
+        print(f"Error retrieving IP address: {e}")
+        return None
 
 def handler(event, context):
     query = "python programming"
@@ -14,6 +25,8 @@ def handler(event, context):
             'description': result.description
         }
 
+    testret['address'] = {"address" : get_public_ip()}
+    
     return {
         'statusCode': 200,
         'headers': {
@@ -23,3 +36,5 @@ def handler(event, context):
         },
         'body': json.dumps(testret)
     }
+
+
