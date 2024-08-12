@@ -7,8 +7,12 @@ def handler(event, context):
     searchs = search(query, num_results=5, advanced=True, lang="en")
 
     testret = {}
-    for i, result in enumerate(searchs):
-        testret[i] = result
+    for i, result in enumerate(search_results):
+        testret[i] = {
+            'url': result.url,
+            'title': result.title,
+            'description': result.description
+        }
 
     return {
         'statusCode': 200,
