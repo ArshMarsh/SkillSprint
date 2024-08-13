@@ -1,6 +1,6 @@
 import json
 from googlesearch import search
-
+from testingUtil import test
 import requests
 
 def get_public_ip():
@@ -26,7 +26,7 @@ def handler(event, context):
         }
 
     testret['address'] = {"address" : get_public_ip()}
-    
+    testret['layertest'] = {"message" : test()}
     return {
         'statusCode': 200,
         'headers': {
