@@ -329,8 +329,8 @@ def handler(event, context):
         for quiz in last_quiz["quizzes"]:
             infobit = {
                 "text": "infobit",
-                "keywords": [],
-                "example": [],
+                "keywords": ["keyword"],
+                "example": "example",
                 "quiz": quiz
             }
 
