@@ -15,6 +15,10 @@
     },
     "s3Key": {
       "Type": "String"
+    },
+    "functionskillsprintbackinfiniteLayerArn": {
+      "Type": "String",
+      "Default": "functionskillsprintbackinfiniteLayerArn"
     }
   },
   "Conditions": {
@@ -79,7 +83,11 @@
           ]
         },
         "Runtime": "python3.10",
-        "Layers": [],
+        "Layers": [
+          {
+            "Ref": "functionskillsprintbackinfiniteLayerArn"
+          }
+        ],
         "Timeout": 25
       }
     },

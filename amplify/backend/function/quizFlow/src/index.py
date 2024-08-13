@@ -517,7 +517,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                             'infoBitId': infobit_id,
                             'text': infobit['text'],
                             'keywords': infobit['keywords'],
-                            'example': infobit['example']
+                            'example': infobit.get('example', "")
                         }
                     )
 

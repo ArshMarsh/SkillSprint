@@ -46,7 +46,15 @@
   "function": {
     "infiniteLambda": {
       "build": true,
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ],
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
