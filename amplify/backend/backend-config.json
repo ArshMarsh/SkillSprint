@@ -67,6 +67,22 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_infiniteLambda_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ]
+    },
+    "AMPLIFY_function_infiniteLambda_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ]
+    },
     "AMPLIFY_function_quizFlow_deploymentBucketName": {
       "usedBy": [
         {
@@ -80,6 +96,38 @@
         {
           "category": "function",
           "resourceName": "quizFlow"
+        }
+      ]
+    },
+    "AMPLIFY_function_skillsprintbackinfiniteLayer_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ]
+    },
+    "AMPLIFY_function_skillsprintbackinfiniteLayer_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ]
+    },
+    "AMPLIFY_function_testfunc_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testfunc"
+        }
+      ]
+    },
+    "AMPLIFY_function_testfunc_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testfunc"
         }
       ]
     }
