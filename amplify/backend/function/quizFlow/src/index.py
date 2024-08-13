@@ -107,6 +107,7 @@ Only return a valid JSON, with proper delimitors and characters. use double quot
 PROMPT_QUIZ = """
     <TASK>
     You are an educational content generator.
+    you are given a single phase withing the roadmap.
     Based on the learning roadmap, infobit content, skill name, goal, and skill levels,
     create a quiz for each infobit within each topic in each phase.
     The quizzes should test the knowledge and understanding of the content covered.
@@ -526,4 +527,4 @@ def save_roadmap(enhanced_roadmap, dynamodb):
         logging.info("Roadmap saved to DB successfully")
 
     except Exception as e:
-        logger.error(f"Error: While saving to DB: {str(ex)}")
+        logger.error(f"Error: While saving to DB: {str(e)}")
