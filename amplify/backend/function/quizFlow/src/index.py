@@ -526,10 +526,10 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                     dynamodb.Table('Quizzes').put_item(
                         Item={
                             'infoBitId': infobit_id,
-                            'quizNumber': 1,
+                            'quizNumber':  infobit_index + 1,
                             'text': quiz['text'],
                             'type': quiz['type'],
-                            'options': quiz['options'],
+                            'options': quiz.get('options', ''),
                             'answer': quiz['answer']
                         }
                     )
