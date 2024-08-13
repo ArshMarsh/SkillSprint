@@ -19,11 +19,11 @@
         },
         "quizFlow": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/quizFlow-51695069616f334d4636-build.zip"
+          "s3Key": "amplify-builds/quizFlow-426174696e48397a4857-build.zip"
         },
         "skillsprintbackinfiniteLayer": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersion823f15f7-build.zip"
+          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersion7ba1ca68-build.zip"
         },
         "testfunc": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",

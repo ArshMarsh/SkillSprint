@@ -321,12 +321,20 @@ def handler(event, context):
             
         final_topic = {
             "topicName": "Final Comprehensive Quiz",
-            "topicNumber": "LAST",
+            "topicNumber": "1",
             "infobitCount": len(last_quiz['quizzes']),
-            "infoBits": [],
-            "quizzes": last_quiz['quizzes']
+            "infoBits": []
         }
-            
+        
+        for quiz in last_quiz["quizzes"]:
+            infobit = {
+            "text": ""
+            "keywords": []
+            "example": []
+            "quiz" : quiz
+            }
+            final_topic["infoBits"].append(infobit) 
+
         final_phase['topics'].append(final_topic)
         
         enhanced_roadmap['phases'].append(final_phase)
