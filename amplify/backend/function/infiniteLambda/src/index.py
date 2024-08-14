@@ -62,7 +62,7 @@ def invoke_next_lambda(roadmap_data):
         client = boto3.client('lambda')
         
         response = client.invoke(
-            FunctionName='infiniteLambda' + str(roadmap_data["lambdaIndex"]), 
+            FunctionName='infiniteLambda' + str(roadmap_data["lambdaIndex"]) + "-test", 
             InvocationType='RequestResponse',
             Payload=json.dumps({
                 'body': json.dumps(roadmap_data)
