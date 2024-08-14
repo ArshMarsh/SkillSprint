@@ -10,7 +10,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-
+    
 def handler(event, context):
     try:
         input_data = json.loads(event['body'])
@@ -21,7 +21,7 @@ def handler(event, context):
             "input_data" : input_data,
             "lambdaIndex" : -1
         }
-        if not all_processed:
+        if True:
             lambda_input = None
             if input_data.get("lambdaIndex") is None:
                 lambda_input = {

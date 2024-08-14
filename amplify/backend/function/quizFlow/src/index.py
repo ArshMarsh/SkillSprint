@@ -545,3 +545,17 @@ def save_roadmap(enhanced_roadmap, dynamodb):
 
     except Exception as e:
         logger.error(f"Error: While saving to DB: {str(e)}")
+
+
+event = {
+    "body": {
+        "skillName": "Python Programming",
+        "goal": "Develop a web application",
+        "currentSkillLevel": "Beginner",
+        "desiredSkillLevel": "Advanced",
+        "estimatedLearningDuration": "3 months"
+    }
+}
+
+# Call handler with event as a dictionary, context can be an empty dict or an actual object
+print(handler(event=event, context={}))
