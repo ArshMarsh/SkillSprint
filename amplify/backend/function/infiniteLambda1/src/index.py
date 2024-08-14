@@ -14,24 +14,17 @@ logger.addHandler(console_handler)
 def handler(event, context):
     try:
         input_data = json.loads(event['body'])
-        
-        all_processed = process_topics(input_data['phases'])
+        lambda_input = input_data
+        if input_data.get("lambdaIndex") is None:
+            lambda_input = {
+            "inputData" : input_data,
+            "lambdaIndex" : 1
+            }
 
-        lambda_response = {
-            "input_data" : input_data,
-            "lambdaIndex" : -1
-        }
+        all_processed = process_topics(lambda_input['inputData']['phases'])
+
         if not all_processed:
-            lambda_input = None
-            if input_data.get("lambdaIndex") is None:
-                lambda_input = {
-                "input_data" : input_data,
-                "lambdaIndex" : 1
-                }
-            else:
-                input_data["lambdaIndex"] = input_data["lambdaIndex"] + 1
-                lambda_input = input_data
-                
+            lambda_input["lambdaIndex"] = lambda_input["lambdaIndex"] + 1
             lambda_response = invoke_next_lambda(lambda_input)
             return lambda_response
         
@@ -43,7 +36,7 @@ def handler(event, context):
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps(lambda_response["input_data"])
+            'body': json.dumps(lambda_input["inputData"])
         }
     except Exception as e:
         logger.error(f"An error occurred: {e}")
@@ -51,10 +44,10 @@ def handler(event, context):
             'statusCode': 500,
             'body': json.dumps({
                 'error': str(e),
-                'lastData': input_data
+                'lastData': lambda_input['inputData']
             })
         }
-
+        
 def invoke_next_lambda(roadmap_data):
     import boto3
     
