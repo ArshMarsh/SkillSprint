@@ -8,5 +8,14 @@
       "isLatestVersionSelected": true
     }
   ],
-  "permissions": {}
+  "permissions": {
+    "function": {
+      "infiniteLambda1": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  }
 }
