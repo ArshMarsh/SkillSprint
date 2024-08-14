@@ -1,6 +1,30 @@
 [
   {
-    "Action": [],
-    "Resource": []
+    "Action": [
+      "bedrock:ListFoundationModels"
+    ],
+    "Resource": [
+      "*"
+    ]
+  },
+  {
+    "Action": [
+      "bedrock:InvokeModel"
+    ],
+    "Resource": [
+      "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+    ]
+  },
+  {
+    "Action": [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem"
+    ],
+    "Resource": [
+      "arn:aws:dynamodb:*:*:table/*"
+    ]
   }
 ]

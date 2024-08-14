@@ -1,5 +1,19 @@
 {
   "api": {
+    "api41f545bd": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    },
     "quizFlow": {
       "dependsOn": [
         {
@@ -13,16 +27,70 @@
       ],
       "providerPlugin": "awscloudformation",
       "service": "API Gateway"
+    },
+    "testing": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "testfunc"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
     }
   },
   "function": {
+    "infiniteLambda": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "quizFlow": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "skillsprintbackinfiniteLayer": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer"
+    },
+    "testfunc": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     }
   },
   "parameters": {
+    "AMPLIFY_function_infiniteLambda_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ]
+    },
+    "AMPLIFY_function_infiniteLambda_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ]
+    },
     "AMPLIFY_function_quizFlow_deploymentBucketName": {
       "usedBy": [
         {
@@ -36,6 +104,38 @@
         {
           "category": "function",
           "resourceName": "quizFlow"
+        }
+      ]
+    },
+    "AMPLIFY_function_skillsprintbackinfiniteLayer_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ]
+    },
+    "AMPLIFY_function_skillsprintbackinfiniteLayer_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ]
+    },
+    "AMPLIFY_function_testfunc_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testfunc"
+        }
+      ]
+    },
+    "AMPLIFY_function_testfunc_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testfunc"
         }
       ]
     }

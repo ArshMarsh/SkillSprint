@@ -1,4 +1,37 @@
 {
+  "test": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-skillsprintback-test-e017b-authRole",
+      "UnauthRoleArn": "arn:aws:iam::905418018509:role/amplify-skillsprintback-test-e017b-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::905418018509:role/amplify-skillsprintback-test-e017b-authRole",
+      "Region": "eu-central-1",
+      "DeploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+      "UnauthRoleName": "amplify-skillsprintback-test-e017b-unauthRole",
+      "StackName": "amplify-skillsprintback-test-e017b",
+      "StackId": "arn:aws:cloudformation:eu-central-1:905418018509:stack/amplify-skillsprintback-test-e017b/2b164060-524e-11ef-a4b3-0a87feea1a9f",
+      "AmplifyAppId": "d2nyzocipcqvn2"
+    },
+    "categories": {
+      "function": {
+        "infiniteLambda": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/infiniteLambda-41564d707768737a6141-build.zip"
+        },
+        "quizFlow": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/quizFlow-426174696e48397a4857-build.zip"
+        },
+        "skillsprintbackinfiniteLayer": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersion7ba1ca68-build.zip"
+        },
+        "testfunc": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/testfunc-4b6b55336f5453685041-build.zip"
+        }
+      }
+    }
+  },
   "dev": {
     "awscloudformation": {
       "AuthRoleName": "amplify-skillsprintback-dev-dffbf-authRole",
@@ -16,7 +49,9 @@
         "quizFlow": {
           "deploymentBucketName": "amplify-skillsprintback-dev-dffbf-deployment",
           "s3Key": "amplify-builds/quizFlow-61515251636b30752f34-build.zip"
-        }
+        },
+        "testfunc": {},
+        "infiniteLambda": {}
       },
       "api": {
         "quizFlow": {}

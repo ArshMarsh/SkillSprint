@@ -7,6 +7,11 @@ verify_ssl = true
 
 [packages]
 src = {editable = true, path = "./src"}
+parsel = "*"
+requests = "*"
+youtube-transcript-api = "*"
+libgen-scraper = "*"
+boto3 = "*"
 
 [requires]
 python_version = "3.10"
