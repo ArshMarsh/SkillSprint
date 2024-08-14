@@ -23,7 +23,7 @@ def handler(event, context):
 
         all_processed = process_topics(lambda_input['inputData']['phases'])
 
-        if not all_processed:
+        if True:
             lambda_input["lambdaIndex"] = lambda_input["lambdaIndex"] + 1
             lambda_response = invoke_next_lambda(lambda_input)
             return lambda_response
