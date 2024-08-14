@@ -28,7 +28,8 @@
         "testfunc": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
           "s3Key": "amplify-builds/testfunc-4b6b55336f5453685041-build.zip"
-        }
+        },
+        "infiniteLambda1": {}
       }
     }
   },

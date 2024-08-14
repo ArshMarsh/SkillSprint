@@ -1,0 +1,12 @@
+{
+  "lambdaLayers": [
+    {
+      "type": "ProjectLayer",
+      "resourceName": "skillsprintbackinfiniteLayer",
+      "env": "test",
+      "version": "Always choose latest version",
+      "isLatestVersionSelected": true
+    }
+  ],
+  "permissions": {}
+}

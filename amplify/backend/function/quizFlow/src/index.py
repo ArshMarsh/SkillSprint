@@ -86,6 +86,7 @@ phases: Array of objects. Each object represents a phase in the learning roadmap
 phaseDescription: Describes what the phase entails.
 topics: Array of objects. Each object represents a topic within the phase. Use original input structure
 topicName:  The name of the topic.
+topicSearchTerm: The search term for google and youtube that gives relevant results for this topic. it should be concise, specific to the topic, and comprehensive. it should have minimum of 2 words and maximum of 5 words.
 infoBits: Array of objects. Each object represents an infobit for the topic.
 text: A string containing information or an explanation about the topic, derived from the topic outline.
 keywords: Array of strings, comprising keywords extracted from the text. Maximum 5 keywords.
@@ -96,6 +97,7 @@ example: Optional string, providing an example to better explain the content in 
       "phaseDescription": string,
       "topics": [{
           "topicName": string,
+          "topicSearchTerm" : string,
           "infoBits": [
             "text": string
             "keywords" :string[]
@@ -203,6 +205,7 @@ PROMPT_QUIZ_LAST = """
     phaseDescription: A summary of what each phase covers and how it contributes to the overall learning objectives.
     topics: Array of objects representing individual topics within each phase.
     topicName: The title or name of the topic covered in the phase.
+    topicSearchTerm: The search term for google and youtube that gives relevant results for this topic.
     topicOutline: Array of strings outlining the key points and details included in the topic.
     infoBits: Array of objects providing detailed pieces of information for each topic.
     text: A brief explanation or description of a specific aspect of the topic.

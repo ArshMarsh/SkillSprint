@@ -14,6 +14,20 @@
       "providerPlugin": "awscloudformation",
       "service": "API Gateway"
     },
+    "infiniteLambda": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "infiniteLambda"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    },
     "quizFlow": {
       "dependsOn": [
         {
@@ -55,6 +69,11 @@
           "resourceName": "skillsprintbackinfiniteLayer"
         }
       ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "infiniteLambda1": {
+      "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
