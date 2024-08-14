@@ -1,5 +1,6 @@
 import json
 import requests
+import boto3
 
 def get_public_ip():
     try:
@@ -12,6 +13,7 @@ def get_public_ip():
         return None
 
 def handler(event, context):
+    client = boto3.client('lambda')
     input_data = json.loads(event['body'])
     
     iteration = int(input_data.get('iteration', 0)) + 1
@@ -25,7 +27,7 @@ def handler(event, context):
     # Check if iteration count is less than or equal to 5
     if iteration < 5:
         # Recursively invoke the Lambda function
-        response = context.client.invoke(
+        response = client.invoke(
             FunctionName=context.function_name,
             InvocationType='RequestResponse',
             Payload=json.dumps({'body': json.dumps(iteration_package)})
