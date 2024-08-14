@@ -1,6 +1,4 @@
 import json
-from googlesearch import search
-
 import requests
 
 def get_public_ip():
@@ -14,27 +12,30 @@ def get_public_ip():
         return None
 
 def handler(event, context):
-    query = "python programming"
-    search_results = search(query, num_results=5, advanced=True, lang="en")
-
-    testret = {}
-    for i, result in enumerate(search_results):
-        testret[i] = {
-            'url': result.url,
-            'title': result.title,
-            'description': result.description
-        }
-
-    testret['address'] = {"address" : get_public_ip()}
+    input_data = json.loads(event['body'])
+    
+    iteration = int(input_data.get('iteration', 0)) + 1
+    ip_num_key = f"iteration{iteration}_ip"
+    
+    iteration_package = {
+        'iteration': iteration,
+        ip_num_key: get_public_ip()
+    }
+    
+    # Check if iteration count is less than or equal to 5
+    if iteration < 5:
+        # Recursively invoke the Lambda function
+        response = context.client.invoke(
+            FunctionName=context.function_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps({'body': json.dumps(iteration_package)})
+        )
+        
+        # Get the response from the recursive call
+        result = json.loads(response['Payload'].read().decode('utf-8'))
+        iteration_package.update(result)
     
     return {
         'statusCode': 200,
-        'headers': {
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-        },
-        'body': json.dumps(testret)
+        'body': json.dumps(iteration_package)
     }
-
-

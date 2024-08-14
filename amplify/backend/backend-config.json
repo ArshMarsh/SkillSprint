@@ -58,6 +58,11 @@
     }
   },
   "function": {
+    "defaultTest": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "infiniteLambda": {
       "build": true,
       "dependsOn": [
