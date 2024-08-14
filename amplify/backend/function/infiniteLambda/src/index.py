@@ -18,7 +18,7 @@ def handler(event, context):
         if input_data.get("lambdaIndex") is None:
             lambda_input = {
             "inputData" : input_data,
-            "lambdaIndex" : 1
+            "lambdaIndex" : 0
             }
 
         all_processed = process_topics(lambda_input['inputData']['phases'])
