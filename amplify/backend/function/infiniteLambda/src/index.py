@@ -10,6 +10,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
+MAX_LAMBDAS = 15
     
 def handler(event, context):
     try:
@@ -21,9 +22,18 @@ def handler(event, context):
             "lambdaIndex" : 0
             }
 
+        if int(lambda_input["lambdaIndex"]) >= MAX_LAMBDAS:
+            return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': "out of lambdas",
+                'lastData': lambda_input['inputData']
+            })
+            }
+
         all_processed = process_topics(lambda_input['inputData']['phases'])
 
-        if True:
+        if not all_processed:
             lambda_input["lambdaIndex"] = lambda_input["lambdaIndex"] + 1
             lambda_response = invoke_next_lambda(lambda_input)
             return lambda_response
@@ -48,17 +58,17 @@ def handler(event, context):
             })
         }
 
-def invoke_next_lambda(roadmap_data):
+def invoke_next_lambda(lambda_input):
     import boto3
     
     try:
         client = boto3.client('lambda')
         
         response = client.invoke(
-            FunctionName='infiniteLambda' + str(roadmap_data["lambdaIndex"]) + "-test", 
+            FunctionName='infiniteLambda' + "-test", 
             InvocationType='RequestResponse',
             Payload=json.dumps({
-                'body': json.dumps(roadmap_data)
+                'body': json.dumps(lambda_input)
             })
         )
         logger.info(f"Next Lambda payload: {response}")

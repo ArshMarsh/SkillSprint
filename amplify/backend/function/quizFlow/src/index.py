@@ -321,7 +321,7 @@ def handler(event, context):
         
         last_quiz = sonnect_api_call(bedrock, PROMPT_QUIZ_LAST, enhanced_roadmap)
         final_phase = {
-                "phaseDescription": "Final Assessment: A comprehensive test covering all topics and phases.",
+                "phaseDescription": "final",
                 "phaseNumber": len(enhanced_roadmap['phases']) + 1,
                 "topicCount": len(last_quiz['quizzes']),
                 "topics": []
@@ -330,6 +330,7 @@ def handler(event, context):
         final_topic = {
             "topicName": "Final Comprehensive Quiz",
             "topicNumber": "1",
+            "topicSearchTerm" : "python programming tutorial",
             "infobitCount": len(last_quiz['quizzes']),
             "infoBits": []
         }
@@ -347,15 +348,17 @@ def handler(event, context):
         final_phase['topics'].append(final_topic)
         
         enhanced_roadmap['phases'].append(final_phase)
-                
-        logging.info("Final Roadmap Generated Successfully")
-        
-        save_roadmap(enhanced_roadmap, dynamodb)
 
-        return {
-            'statusCode': 200,
-            'body': enhanced_roadmap
-        }
+        logging.info("Roadmap with quizzes generated successfully")
+        
+        lambda_response = invoke_next_lambda(enhanced_roadmap)
+        if int(lambda_response['statusCode']) == 200:
+            #save roadmap to DB
+            save_roadmap(lambda_response['body'], dynamodb)
+            logging.info("Final Roadmap Generated Successfully")
+
+        #error invoked
+        return lambda_response
 
     except Exception as e:
         logger.error(f"Error: While generating roadmap: {str(e)}")
@@ -511,7 +514,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                         'topicNumber': topic_index + 1,
                         'topicId': topic_id,
                         'topicName': topic['topicName'],
-                        'topicOutline': topic.get('topicOutline', [])
+                        'searchResults': topic.get('searchResults', {})
                     }
                 )
 
@@ -546,3 +549,33 @@ def save_roadmap(enhanced_roadmap, dynamodb):
     except Exception as e:
         logger.error(f"Error: While saving to DB: {str(e)}")
 
+
+
+
+def invoke_next_lambda(lambda_input):    
+    try:
+        client = boto3.client('lambda')
+        
+        response = client.invoke(
+            FunctionName='infiniteLambda' + "-test", 
+            InvocationType='RequestResponse',
+            Payload=json.dumps({
+                'body': json.dumps(lambda_input)
+            })
+        )
+        logger.info(f"Next Lambda payload: {response}")
+
+    
+        if 'Payload' in response:
+            response_payload = json.loads(response['Payload'].read())
+        else:
+            response_payload = response 
+
+        logger.info(f"Next Lambda response: {response_payload}")
+
+        return response_payload
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
