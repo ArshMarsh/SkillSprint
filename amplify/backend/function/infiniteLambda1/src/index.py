@@ -1,79 +1,114 @@
-import json
-import logging
-import requests
-from webSearcher import process_topics
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-console_handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]')
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
+import boto3
+from boto3.dynamodb.conditions import Key
 
 
 def handler(event, context):
     try:
+        dynamodb = boto3.resource('dynamodb', region_name=region_name)
         input_data = json.loads(event['body'])
-        lambda_input = input_data
-        if input_data.get("lambdaIndex") is None:
-            lambda_input = {
-            "inputData" : input_data,
-            "lambdaIndex" : 1
-            }
-
-        all_processed = process_topics(lambda_input['inputData']['phases'])
-
-        if not all_processed:
-            lambda_input["lambdaIndex"] = lambda_input["lambdaIndex"] + 1
-            lambda_response = invoke_next_lambda(lambda_input)
-            return lambda_response
-        
-        
+        roadmap = get_roadmap(input_data['roadmapId'], dynamodb)
         return {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Headers': '*',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-            },
-            'body': json.dumps(lambda_input["inputData"])
+            'body': json.dumps(roadmap)
         }
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         return {
             'statusCode': 500,
             'body': json.dumps({
-                'error': str(e),
-                'lastData': lambda_input['inputData']
+                'error': str(e)
             })
         }
         
-def invoke_next_lambda(roadmap_data):
-    import boto3
-    
+
+
+def get_roadmap(roadmap_id, dynamodb):
     try:
-        client = boto3.client('lambda')
-        
-        response = client.invoke(
-            FunctionName='infiniteLambda' + str(roadmap_data["lambdaIndex"]), 
-            InvocationType='RequestResponse',
-            Payload=json.dumps({
-                'body': json.dumps(roadmap_data)
-            })
+        # Get the roadmap item
+        roadmap_response = dynamodb.Table('Roadmaps').get_item(
+            Key={'id': roadmap_id}
         )
-        logger.info(f"Next Lambda payload: {response}")
+        roadmap = roadmap_response.get('Item')
+        if not roadmap:
+            raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
 
-    
-        if 'Payload' in response:
-            response_payload = json.loads(response['Payload'].read())
-        else:
-            response_payload = response 
-
-        logger.info(f"Next Lambda response: {response_payload}")
-
-        return response_payload
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
+        # Initialize the original object
+        original_object = {
+            'title': roadmap['title'],
+            'description': roadmap['description'],
+            'imageURL': roadmap['imageURL'],
+            'estimatedLearningDuration': roadmap['estimatedLearningDuration'],
+            'goal': roadmap['goal'],
+            'currentSkillLevel': roadmap['currentSkillLevel'],
+            'desiredSkillLevel': roadmap['desiredSkillLevel'],
+            'currentLesson': roadmap['currentLesson'],
+            'currentPhase': roadmap['currentPhase'],
+            'dailyTime': roadmap['dailyTime'],
+            'phases': []
         }
+
+        # Query the phases
+        phases_response = dynamodb.Table('Phases').query(
+            KeyConditionExpression=Key('roadmapId').eq(roadmap_id)
+        )
+        phases = phases_response['Items']
+
+        # For each phase, get the topics
+        for phase in phases:
+            phase_object = {
+                'phaseDescription': phase['phaseDescription'],
+                'topics': []
+            }
+            phase_id = phase['phaseId']
+
+            topics_response = dynamodb.Table('Topics').query(
+                KeyConditionExpression=Key('phaseId').eq(phase_id)
+            )
+            topics = topics_response['Items']
+
+            # For each topic, get the infoBits
+            for topic in topics:
+                topic_object = {
+                    'topicName': topic['topicName'],
+                    'searchResult' : topic['searchResult'],
+                    'infoBits': []
+                }
+                topic_id = topic['topicId']
+
+                infobits_response = dynamodb.Table('InfoBits').query(
+                    KeyConditionExpression=Key('topicId').eq(topic_id)
+                )
+                infobits = infobits_response['Items']
+
+                # For each infoBit, get the quiz
+                for infobit in infobits:
+                    quiz_response = dynamodb.Table('Quizzes').query(
+                        KeyConditionExpression=Key('infoBitId').eq(infobit['infoBitId'])
+                    )
+                    quiz = quiz_response['Items'][0]
+
+                    infobit_object = {
+                        'text': infobit['text'],
+                        'keywords': infobit['keywords'],
+                        'example': infobit.get('example', ''),
+                        'quiz': {
+                            'text': quiz['text'],
+                            'type': quiz['type'],
+                            'options': quiz.get('options', []),
+                            'answer': quiz['answer']
+                        }
+                    }
+                    topic_object['infoBits'].append(infobit_object)
+
+                phase_object['topics'].append(topic_object)
+            original_object['phases'].append(phase_object)
+
+        return original_object
+
+    except Exception as e:
+        logger.error(f"Error: While retrieving from DB: {str(e)}")
+        return None
+
+
+
+

@@ -413,8 +413,8 @@ def sonnect_api_call(bedrock, prompt, input_data):
             if error_code == 'ThrottlingException':
                 retry_attempts += 1
                 wait_time = 2 ** retry_attempts + random.uniform(0, 1)
-                logger.error(f"ThrottlingException detected. Retry attempt {retry_attempts}. "
-                             f"Waiting {wait_time:.2f} seconds before retrying...")
+                logger.error(f"Throttling. Retry attempt {retry_attempts}. "
+                             f"Waiting {wait_time:.2f}")
                 time.sleep(wait_time)
             else:
                 logger.error(f"Error: While making API call to AI: {str(e)}")
@@ -491,81 +491,78 @@ def enhance_roadmap(json_input):
         raise
 
 def save_roadmap(enhanced_roadmap, dynamodb):
-    try:
-        roadmap_id = str(uuid.uuid4())
 
-        # Save Roadmap
-        dynamodb.Table('Roadmaps').put_item(
+    roadmap_id = str(uuid.uuid4())
+
+    # Save Roadmap
+    dynamodb.Table('Roadmaps').put_item(
+        Item={
+            'id': roadmap_id,
+            'title': enhanced_roadmap['title'],
+            'description': enhanced_roadmap['description'],
+            'imageURL': enhanced_roadmap['imageURL'],
+            'estimatedLearningDuration': enhanced_roadmap['estimatedLearningDuration'],
+            'goal': enhanced_roadmap['goal'],
+            'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
+            'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
+            'currentLesson': enhanced_roadmap['currentLesson'],
+            'currentPhase': enhanced_roadmap['currentPhase'],
+            'dailyTime': enhanced_roadmap['dailyTime'],
+        }
+    )
+
+    # Save Phases
+    for phase_index, phase in enumerate(enhanced_roadmap['phases']):
+        phase_id = f"{roadmap_id}#PHASE#{phase_index + 1}"
+        dynamodb.Table('Phases').put_item(
             Item={
-                'id': roadmap_id,
-                'title': enhanced_roadmap['title'],
-                'description': enhanced_roadmap['description'],
-                'imageURL': enhanced_roadmap['imageURL'],
-                'estimatedLearningDuration': enhanced_roadmap['estimatedLearningDuration'],
-                'goal': enhanced_roadmap['goal'],
-                'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
-                'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
-                'currentLesson': enhanced_roadmap['currentLesson'],
-                'currentPhase': enhanced_roadmap['currentPhase'],
-                'dailyTime': enhanced_roadmap['dailyTime'],
+                'roadmapId': roadmap_id,
+                'phaseNumber': phase_index + 1,
+                'phaseId': phase_id,
+                'phaseDescription': phase['phaseDescription']
             }
         )
 
-        # Save Phases
-        for phase_index, phase in enumerate(enhanced_roadmap['phases']):
-            phase_id = f"{roadmap_id}#PHASE#{phase_index + 1}"
-            dynamodb.Table('Phases').put_item(
+        # Save Topics
+        for topic_index, topic in enumerate(phase['topics']):
+            topic_id = f"{phase_id}#TOPIC#{topic_index + 1}"
+            dynamodb.Table('Topics').put_item(
                 Item={
-                    'roadmapId': roadmap_id,
-                    'phaseNumber': phase_index + 1,
                     'phaseId': phase_id,
-                    'phaseDescription': phase['phaseDescription']
+                    'topicNumber': topic_index + 1,
+                    'topicId': topic_id,
+                    'topicName': topic['topicName'],
+                    'searchResult': topic['searchResult']
                 }
             )
 
-            # Save Topics
-            for topic_index, topic in enumerate(phase['topics']):
-                topic_id = f"{phase_id}#TOPIC#{topic_index + 1}"
-                dynamodb.Table('Topics').put_item(
+            # Save InfoBits
+            for infobit_index, infobit in enumerate(topic['infoBits']):
+                infobit_id = f"{topic_id}#INFOBIT#{infobit_index + 1}"
+                dynamodb.Table('InfoBits').put_item(
                     Item={
-                        'phaseId': phase_id,
-                        'topicNumber': topic_index + 1,
                         'topicId': topic_id,
-                        'topicName': topic['topicName'],
-                        'searchResults': topic.get('searchResults', {})
+                        'infoBitNumber': infobit_index + 1,
+                        'infoBitId': infobit_id,
+                        'text': infobit['text'],
+                        'keywords': infobit['keywords'],
+                        'example': infobit.get('example', "")
                     }
                 )
 
-                # Save InfoBits
-                for infobit_index, infobit in enumerate(topic['infoBits']):
-                    infobit_id = f"{topic_id}#INFOBIT#{infobit_index + 1}"
-                    dynamodb.Table('InfoBits').put_item(
-                        Item={
-                            'topicId': topic_id,
-                            'infoBitNumber': infobit_index + 1,
-                            'infoBitId': infobit_id,
-                            'text': infobit['text'],
-                            'keywords': infobit['keywords'],
-                            'example': infobit.get('example', "")
-                        }
-                    )
-
-                    # Save Quiz
-                    quiz = infobit['quiz']
-                    dynamodb.Table('Quizzes').put_item(
-                        Item={
-                            'infoBitId': infobit_id,
-                            'quizNumber':  infobit_index + 1,
-                            'text': quiz['text'],
-                            'type': quiz['type'],
-                            'options': quiz.get('options', ''),
-                            'answer': quiz['answer']
-                        }
-                    )
-        logging.info("Roadmap saved to DB successfully")
-
-    except Exception as e:
-        logger.error(f"Error: While saving to DB: {str(e)}")
+                # Save Quiz
+                quiz = infobit['quiz']
+                dynamodb.Table('Quizzes').put_item(
+                    Item={
+                        'infoBitId': infobit_id,
+                        'quizNumber':  infobit_index + 1,
+                        'text': quiz['text'],
+                        'type': quiz['type'],
+                        'options': quiz.get('options', ''),
+                        'answer': quiz['answer']
+                    }
+                )
+    logging.info("Roadmap saved to DB successfully")
 
 
 
