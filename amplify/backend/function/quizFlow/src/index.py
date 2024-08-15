@@ -369,8 +369,9 @@ def handler(event, context):
 
         
 def sonnect_api_call(bedrock, prompt, input_data):
-    try:
-        request_body = {
+    max_retries = 5
+    retry_attempts = 0
+    request_body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 300000,
             "messages": [
@@ -382,29 +383,36 @@ def sonnect_api_call(bedrock, prompt, input_data):
             "temperature": 0.2,
             "top_p": 0.9,
         }
-        
-        # Invoke the model
-        response = bedrock.invoke_model(
-            body=json.dumps(request_body),
-            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
-            contentType="application/json",
-            accept="application/json"
-        )
-        
-        # Parse and return the response
-        response_body = json.loads(response['body'].read())
-        response_content = response_body['content'][0]['text']
-        
+    while retry_attempts < max_retries:
         try:
-            result = json.loads(response_content)
-        except Exception as e:
-            result = extract_json(response_content)
+            # Invoke the model
+            response = bedrock.invoke_model(
+                body=json.dumps(request_body),
+                modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                contentType="application/json",
+                accept="application/json"
+            )
             
-        return result
-    
-    except Exception as e:
-        logger.error(f"Error: While making API call to AI: {str(e)}")
-        raise 
+            # Parse and return the response
+            response_body = json.loads(response['body'].read())
+            response_content = response_body['content'][0]['text']
+            
+            try:
+                result = json.loads(response_content)
+            except Exception as e:
+                result = extract_json(response_content)
+                
+            return result
+        
+        except ThrottlingException as e:
+            retry_attempts += 1
+            wait_time = 2 ** retry_attempts + random.uniform(0, 1)
+            time.sleep(wait_time)
+            print(f"Retrying in {wait_time:.2f} seconds...") 
+        except Exception as e:
+            logger.error(f"Error: While making API call to AI: {str(e)}")
+            raise 
+    raise Exception("Max retries reached. ThrottlingException persists.")
     
 def extract_json(response):
     try:
