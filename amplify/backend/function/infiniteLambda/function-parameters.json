@@ -7,15 +7,5 @@
       "version": "Always choose latest version",
       "isLatestVersionSelected": true
     }
-  ],
-  "permissions": {
-    "function": {
-      "infiniteLambda1": [
-        "create",
-        "read",
-        "update",
-        "delete"
-      ]
-    }
-  }
+  ]
 }

@@ -58,11 +58,6 @@
     }
   },
   "function": {
-    "defaultTest": {
-      "build": true,
-      "providerPlugin": "awscloudformation",
-      "service": "Lambda"
-    },
     "infiniteLambda": {
       "build": true,
       "dependsOn": [
@@ -115,6 +110,22 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_infiniteLambda1_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda1"
+        }
+      ]
+    },
+    "AMPLIFY_function_infiniteLambda1_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda1"
+        }
+      ]
+    },
     "AMPLIFY_function_infiniteLambda_deploymentBucketName": {
       "usedBy": [
         {
