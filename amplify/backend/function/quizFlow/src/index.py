@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import uuid
+from botocore.exceptions import ClientError
 
 # Set up logger
 logger = logging.getLogger()
