@@ -1,3 +1,5 @@
+import time
+import random
 import boto3
 import json
 import logging
@@ -404,11 +406,18 @@ def sonnect_api_call(bedrock, prompt, input_data):
                 
             return result
         
-        except ThrottlingException as e:
-            retry_attempts += 1
-            wait_time = 2 ** retry_attempts + random.uniform(0, 1)
-            time.sleep(wait_time)
-            print(f"Retrying in {wait_time:.2f} seconds...") 
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+
+            if error_code == 'ThrottlingException':
+                retry_attempts += 1
+                wait_time = 2 ** retry_attempts + random.uniform(0, 1)
+                logger.error(f"ThrottlingException detected. Retry attempt {retry_attempts}. "
+                             f"Waiting {wait_time:.2f} seconds before retrying...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"Error: While making API call to AI: {str(e)}")
+                raise e
         except Exception as e:
             logger.error(f"Error: While making API call to AI: {str(e)}")
             raise 
