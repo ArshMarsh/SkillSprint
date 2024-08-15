@@ -354,7 +354,7 @@ def handler(event, context):
 
         logging.info("Roadmap with quizzes generated successfully")
         
-        lambda_response = invoke_next_lambda(enhanced_roadmap)
+        lambda_response = json.loads(invoke_next_lambda(enhanced_roadmap))
         if int(lambda_response['statusCode']) == 200:
             #save roadmap to DB
             save_roadmap(lambda_response['body'], dynamodb)
@@ -415,7 +415,7 @@ def sonnect_api_call(bedrock, prompt, input_data):
                 wait_time = 2 ** retry_attempts + random.uniform(0, 1)
                 if retry_attempts > 5 :
                     wait_time = 30.2
-                    
+
                 logger.error(f"Throttling. Retry attempt {retry_attempts}. "
                              f"Waiting {wait_time:.2f}")
                 time.sleep(wait_time)
