@@ -22,13 +22,6 @@ export type AmplifyDependentResourcesAttributes = {
     }
   },
   "function": {
-    "defaultTest": {
-      "Arn": "string",
-      "LambdaExecutionRole": "string",
-      "LambdaExecutionRoleArn": "string",
-      "Name": "string",
-      "Region": "string"
-    },
     "infiniteLambda": {
       "Arn": "string",
       "LambdaExecutionRole": "string",
