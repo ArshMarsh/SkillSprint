@@ -354,10 +354,10 @@ def handler(event, context):
 
         logging.info("Roadmap with quizzes generated successfully")
         
-        lambda_response = json.loads(invoke_next_lambda(enhanced_roadmap))
+        lambda_response = invoke_next_lambda(enhanced_roadmap)
         if int(lambda_response['statusCode']) == 200:
             #save roadmap to DB
-            save_roadmap(lambda_response['body'], dynamodb)
+            save_roadmap(json.loads(lambda_response['body']), dynamodb)
             logging.info("Final Roadmap Generated Successfully")
 
         #error invoked
@@ -410,7 +410,7 @@ def sonnect_api_call(bedrock, prompt, input_data):
         except ClientError as e:
             error_code = e.response['Error']['Code']
 
-            if error_code == 'ThrottlingException':
+            if error_code == 'ThrottlingException' or error_code == 'InternalServerException':
                 retry_attempts += 1
                 wait_time = 2 ** retry_attempts + random.uniform(0, 1)
                 if retry_attempts > 5 :

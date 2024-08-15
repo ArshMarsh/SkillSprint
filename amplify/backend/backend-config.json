@@ -14,6 +14,20 @@
       "providerPlugin": "awscloudformation",
       "service": "API Gateway"
     },
+    "dbOp": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "dbOperations"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    },
     "infiniteLambda": {
       "dependsOn": [
         {
@@ -58,6 +72,11 @@
     }
   },
   "function": {
+    "dbOperations": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "infiniteLambda": {
       "build": true,
       "dependsOn": [

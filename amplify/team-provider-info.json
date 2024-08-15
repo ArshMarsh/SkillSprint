@@ -32,7 +32,8 @@
         "infiniteLambda1": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
           "s3Key": "amplify-builds/infiniteLambda1-66437a534c344c57504f-build.zip"
-        }
+        },
+        "dbOperations": {}
       }
     }
   },
