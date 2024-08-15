@@ -7,13 +7,6 @@
       "permissions": {
         "setting": "open"
       }
-    },
-    "/roadmap/{roamdapId}": {
-      "name": "/roadmap/{roamdapId}",
-      "lambdaFunction": "dbOperations",
-      "permissions": {
-        "setting": "open"
-      }
     }
   }
 }
