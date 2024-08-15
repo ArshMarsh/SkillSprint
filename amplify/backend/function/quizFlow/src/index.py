@@ -412,10 +412,10 @@ def sonnect_api_call(bedrock, prompt, input_data):
 
             if error_code == 'ThrottlingException':
                 retry_attempts += 1
+                wait_time = 2 ** retry_attempts + random.uniform(0, 1)
                 if retry_attempts > 5 :
                     wait_time = 30.2
-                else:
-                    wait_time = 2 ** retry_attempts + random.uniform(0, 1)
+                    
                 logger.error(f"Throttling. Retry attempt {retry_attempts}. "
                              f"Waiting {wait_time:.2f}")
                 time.sleep(wait_time)
