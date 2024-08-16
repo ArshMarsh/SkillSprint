@@ -9,7 +9,7 @@ def handler(event, context):
     try:
         http_method = event['httpMethod']
         path_parameters = event.get('pathParameters', {})
-        roadmap_id = path_parameters.get('roadmapId', "")
+        roadmap_id = path_parameters.get('proxy+', "")
 
         if http_method == 'GET':
             if roadmap_id:

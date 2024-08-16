@@ -1,8 +1,15 @@
 {
   "version": 1,
   "paths": {
-    "/roadmap": {
-      "name": "/roadmap",
+    "/allRoadmap": {
+      "name": "/allRoadmap",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/roadmap/{roadmapId}": {
+      "name": "/roadmap/{roadmapId}",
       "lambdaFunction": "dbOperations",
       "permissions": {
         "setting": "open"
