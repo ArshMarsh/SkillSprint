@@ -299,7 +299,8 @@ def get_user_roadmap(user_id, roadmap_id, dynamodb):
             raise ValueError(f"User roadmap not found for user {user_id} and roadmap {roadmap_id}.")
         
         roadmap['status'] = user_roadmap['status']
-        
+        roadmap['currentLesson'] = user_roadmap['currentLesson']
+        roadmap['currentPhase'] = user_roadmap['currentPhase']
         for phase in roadmap['phases']:
             for topic in phase['topics']:
                 for infobit in topic['infoBits']:
@@ -420,7 +421,7 @@ def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
                 'userId': user_id,
                 'roadmapId': roadmap_id
             },
-            UpdateExpression="SET #status = :status, quizAnswers = :quizAnswers, currentLesson = :currentLesson, currentPhase = :currentPhase",
+            UpdateExpression="SET currentLesson = :currentLesson, currentPhase = :currentPhase, quizAnswers = :quizAnswers, #status = :status ",
             ExpressionAttributeNames={
                 '#status': 'status'  
             },
@@ -428,7 +429,7 @@ def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
                 ':status': user_roadmap.get('status', 'ongoing'),  
                 ':quizAnswers': quiz_answers,
                 ':currrentLesson': user_roadmap['currentLesson'],
-                ':currentPhase' : user_roadmap['currentPhase']  
+                ':currentPhase' : user_roadmap['currentPhase']
             }
         )
 

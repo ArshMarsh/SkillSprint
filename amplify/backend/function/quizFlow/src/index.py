@@ -583,8 +583,8 @@ def save_user_roadmap(user_id, roadmap_id, dynamodb):
                 'userId': user_id,
                 'roadmapId': roadmap_id,
                 'status': 'ongoing',
-                'currentLesson' : 1,
-                'currentPhase' : 1,
+                'currentLesson' : "1",
+                'currentPhase' : "1",
                 'quizAnswers': {}  # Default empty map
             }
         )
