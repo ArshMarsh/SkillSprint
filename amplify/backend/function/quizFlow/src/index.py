@@ -28,6 +28,7 @@ goal (string): The objective the user hopes to achieve after completing the lear
 currentSkillLevel (string): The user's initial proficiency in the skill.
 desiredSkillLevel (string): The proficiency level the user aims to reach.
 estimatedLearningDuration (string): The expected time to complete the learning path.
+dailyTime (string): the amount of daily time the user is going to be spending on learning this skill.
 <INPUT/>
 
 <OUTPUT>
@@ -72,7 +73,7 @@ optionally add an example in each infobit wherever an example would help explain
 <TASK/>
 
 <INPUT>
-title: The title of the learning roadmap. (Dont includes "learning path" in "Roadmap" in this title)
+title: The title of the learning roadmap. (no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
 description:  A detailed description explaining the content covered in the roadmap
 goal (string): The objective the user hopes to achieve after completing the learning roadmap.
 currentSkillLevel (string): The user's initial proficiency in the skill.
@@ -259,8 +260,11 @@ def handler(event, context):
         
         dynamodb = boto3.resource('dynamodb', region_name=region_name)
 
+        data = json.loads(event['body'])
+        user_id = data['userId']
+        
+        input_data = {key: value for key, value in data.items() if key != "userId"}
 
-        input_data = json.loads(event['body'])
         
         roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
         phase_count = len(roadmap_skeleton['phases'])
@@ -297,7 +301,7 @@ def handler(event, context):
             'desiredSkillLevel': input_data['desiredSkillLevel'],
             'currentLesson': 1,
             'currentPhase': 1,
-            'dailyTime': input_data['desiredSkillLevel'],
+            'dailyTime': input_data['dailyTime'],
             'phases': phases,
         }
         
@@ -511,7 +515,8 @@ def save_roadmap(enhanced_roadmap, dynamodb):
             'currentLesson': enhanced_roadmap['currentLesson'],
             'currentPhase': enhanced_roadmap['currentPhase'],
             'dailyTime': enhanced_roadmap['dailyTime'],
-            'phaseCount': enhanced_roadmap['phaseCount']
+            'phaseCount': enhanced_roadmap['phaseCount'],
+            'totalLessons': enhanced_roadmap['totalLessons']
         }
     )
 
@@ -534,7 +539,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
             dynamodb.Table('Topics').put_item(
                 Item={
                     'phaseId': phase_id,
-                    'topicNumber': topic_index + 1,
+                    'topicNumber': topic['topicNumber'],
                     'topicId': topic_id,
                     'topicName': topic['topicName'],
                     'searchResult': topic['searchResult'],

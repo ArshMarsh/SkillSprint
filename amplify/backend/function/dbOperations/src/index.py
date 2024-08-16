@@ -142,7 +142,6 @@ def handler(event, context):
 
 def get_roadmap(roadmap_id, dynamodb):
     try:
-        # Get the roadmap item
         roadmap_response = dynamodb.Table('Roadmaps').get_item(
             Key={'id': roadmap_id}
         )
@@ -150,7 +149,6 @@ def get_roadmap(roadmap_id, dynamodb):
         if not roadmap:
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
 
-        # Initialize the original object
         original_object = {
             'title': roadmap['title'],
             'description': roadmap['description'],
@@ -163,6 +161,7 @@ def get_roadmap(roadmap_id, dynamodb):
             'currentPhase': roadmap['currentPhase'],
             'dailyTime': roadmap['dailyTime'],
             'phaseCount': roadmap['phaseCount'],
+            'totalLessons': roadmap['totalLessons'],
             'phases': []
         }
 
@@ -251,7 +250,7 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
             UpdateExpression="SET title = :title, description = :description, imageURL = :imageURL, "
                              "estimatedLearningDuration = :estimatedLearningDuration, goal = :goal, "
                              "currentSkillLevel = :currentSkillLevel, desiredSkillLevel = :desiredSkillLevel, "
-                             "currentLesson = :currentLesson, currentPhase = :currentPhase, dailyTime = :dailyTime, phaseCount = :phaseCount",
+                             "currentLesson = :currentLesson, currentPhase = :currentPhase, dailyTime = :dailyTime, phaseCount = :phaseCount, totalLessons = :totalLessons",
             ExpressionAttributeValues={
                 ':title': updated_roadmap['title'],
                 ':description': updated_roadmap['description'],
@@ -263,7 +262,8 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                 ':currentLesson': updated_roadmap['currentLesson'],
                 ':currentPhase': updated_roadmap['currentPhase'],
                 ':dailyTime': updated_roadmap['dailyTime'],
-                ':phaseCount': updated_roadmap['phaseCount']
+                ':phaseCount': updated_roadmap['phaseCount'],
+                ':totalLessons': updated_roadmap['totalLessons']
             }
         )
 
@@ -399,7 +399,7 @@ def get_all_roadmap_details(dynamodb):
     try:
         # Scan the Roadmaps table to get all items
         response = dynamodb.Table('Roadmaps').scan(
-            ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime'
+            ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime, totalLessons'
         )
 
         roadmap_details = []
@@ -416,7 +416,8 @@ def get_all_roadmap_details(dynamodb):
                 'currentLesson': item['currentLesson'],
                 'currentPhase': item['currentPhase'],
                 'dailyTime': item['dailyTime'],
-                'phaseCount': item['phaseCount']
+                'phaseCount': item['phaseCount'],
+                'totalLessons': item['totalLessons']
             })
         
         logging.info(f"Fetched {len(roadmap_details)} roadmap details.")
@@ -445,7 +446,8 @@ def save_roadmap(enhanced_roadmap, dynamodb):
             'currentPhase': enhanced_roadmap['currentPhase'],
             'dailyTime': enhanced_roadmap['dailyTime'],
             'phaseCount': enhanced_roadmap['phaseCount'],
-            'phaseNumber':  enhanced_roadmap['phaseNumber']
+            'phaseNumber':  enhanced_roadmap['phaseNumber'],
+            'totalLessons': enhanced_roadmap['totalLessons']
         }
     )
 
@@ -503,6 +505,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                     }
                 )
     logging.info("Roadmap saved to DB successfully")
+
 
 
 def convert_decimals(obj):

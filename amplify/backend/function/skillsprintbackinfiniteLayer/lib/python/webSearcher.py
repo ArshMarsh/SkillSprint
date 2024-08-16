@@ -5,18 +5,20 @@ from requests.exceptions import HTTPError
 #TODO sort order and search quality
 def search_resources(search_query):
     try:
-        google_results = next(search(search_query, advanced=True, region="us", num_results=2))
-        google_result = {
-            "title" : google_results.title,
-            "url"   : google_results.url,
-            "description" : google_results.description
-        }
-        video_search = VideosSearch(search_query, limit=2)
-        video_result = video_search.result()["result"][0]
+        google_results = []
+        for result in search(search_query, advanced=True, region="us", num_results=3):
+            google_results.append({
+                "title": result.title,
+                "url": result.url,
+                "description": result.description
+            })
+
+        video_search = VideosSearch(search_query, limit=3)
+        video_results = video_search.result()["result"]
 
         search_results = {
-            "webResult" : google_result,
-            "videoResult" : video_result
+            "webResult" : google_results,
+            "videoResult" : video_results
         }
         return search_results
     except StopIteration:
@@ -25,7 +27,6 @@ def search_resources(search_query):
     except Exception as e: 
         raise
     
-
 def process_topics(phases):
     for phase in phases:
         for topic in phase['topics']:

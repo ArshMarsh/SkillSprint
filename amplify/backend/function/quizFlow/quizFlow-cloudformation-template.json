@@ -80,7 +80,7 @@
         },
         "Runtime": "python3.10",
         "Layers": [],
-        "Timeout": 25
+        "Timeout": 850
       }
     },
     "LambdaExecutionRole": {
