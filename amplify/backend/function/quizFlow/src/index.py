@@ -299,8 +299,6 @@ def handler(event, context):
             'goal': input_data['goal'],
             'currentSkillLevel': input_data['currentSkillLevel'],
             'desiredSkillLevel': input_data['desiredSkillLevel'],
-            'currentLesson': 1,
-            'currentPhase': 1,
             'dailyTime': input_data['dailyTime'],
             'phases': phases,
         }
@@ -512,8 +510,6 @@ def save_roadmap(enhanced_roadmap, user_id, dynamodb):
                 'goal': enhanced_roadmap['goal'],
                 'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
                 'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
-                'currentLesson': enhanced_roadmap['currentLesson'],
-                'currentPhase': enhanced_roadmap['currentPhase'],
                 'dailyTime': enhanced_roadmap['dailyTime'],
                 'phaseCount': enhanced_roadmap['phaseCount'],
                 'totalLessons': enhanced_roadmap['totalLessons']
@@ -586,7 +582,9 @@ def save_user_roadmap(user_id, roadmap_id, dynamodb):
             Item={
                 'userId': user_id,
                 'roadmapId': roadmap_id,
-                'status': 'ongoing',  # Default value
+                'status': 'ongoing',
+                'currentLesson' : 1,
+                'currentPhase' : 1,
                 'quizAnswers': {}  # Default empty map
             }
         )

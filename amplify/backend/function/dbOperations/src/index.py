@@ -208,7 +208,7 @@ def get_roadmap(roadmap_id, dynamodb):
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
 
         original_object = {
-            'id' : roadmap_id
+            'id' : roadmap_id,
             'title': roadmap['title'],
             'description': roadmap['description'],
             'imageURL': roadmap['imageURL'],
@@ -216,8 +216,6 @@ def get_roadmap(roadmap_id, dynamodb):
             'goal': roadmap['goal'],
             'currentSkillLevel': roadmap['currentSkillLevel'],
             'desiredSkillLevel': roadmap['desiredSkillLevel'],
-            'currentLesson': roadmap['currentLesson'],
-            'currentPhase': roadmap['currentPhase'],
             'dailyTime': roadmap['dailyTime'],
             'phaseCount': roadmap['phaseCount'],
             'totalLessons': roadmap['totalLessons'],
@@ -331,7 +329,7 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
             UpdateExpression="SET title = :title, description = :description, imageURL = :imageURL, "
                              "estimatedLearningDuration = :estimatedLearningDuration, goal = :goal, "
                              "currentSkillLevel = :currentSkillLevel, desiredSkillLevel = :desiredSkillLevel, "
-                             "currentLesson = :currentLesson, currentPhase = :currentPhase, dailyTime = :dailyTime, phaseCount = :phaseCount, totalLessons = :totalLessons",
+                             ", dailyTime = :dailyTime, phaseCount = :phaseCount, totalLessons = :totalLessons",
             ExpressionAttributeValues={
                 ':title': updated_roadmap['title'],
                 ':description': updated_roadmap['description'],
@@ -340,8 +338,6 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                 ':goal': updated_roadmap['goal'],
                 ':currentSkillLevel': updated_roadmap['currentSkillLevel'],
                 ':desiredSkillLevel': updated_roadmap['desiredSkillLevel'],
-                ':currentLesson': updated_roadmap['currentLesson'],
-                ':currentPhase': updated_roadmap['currentPhase'],
                 ':dailyTime': updated_roadmap['dailyTime'],
                 ':phaseCount': updated_roadmap['phaseCount'],
                 ':totalLessons': updated_roadmap['totalLessons']
@@ -424,13 +420,15 @@ def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
                 'userId': user_id,
                 'roadmapId': roadmap_id
             },
-            UpdateExpression="SET #status = :status, quizAnswers = :quizAnswers",
+            UpdateExpression="SET #status = :status, quizAnswers = :quizAnswers, currentLesson = :currentLesson, currentPhase = :currentPhase",
             ExpressionAttributeNames={
                 '#status': 'status'  
             },
             ExpressionAttributeValues={
                 ':status': user_roadmap.get('status', 'ongoing'),  
-                ':quizAnswers': quiz_answers  
+                ':quizAnswers': quiz_answers,
+                ':currrentLesson': user_roadmap['currentLesson'],
+                ':currentPhase' : user_roadmap['currentPhase']  
             }
         )
 
@@ -526,7 +524,7 @@ def get_all_roadmap_details(dynamodb):
     try:
         # Scan the Roadmaps table to get all items
         response = dynamodb.Table('Roadmaps').scan(
-            ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime, totalLessons'
+            ProjectionExpression='id, title, description, phaseCount, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, dailyTime, totalLessons'
         )
 
         roadmap_details = []
@@ -540,8 +538,6 @@ def get_all_roadmap_details(dynamodb):
                 'goal': item['goal'],
                 'currentSkillLevel': item['currentSkillLevel'],
                 'desiredSkillLevel': item['desiredSkillLevel'],
-                'currentLesson': item['currentLesson'],
-                'currentPhase': item['currentPhase'],
                 'dailyTime': item['dailyTime'],
                 'phaseCount': item['phaseCount'],
                 'totalLessons': item['totalLessons']
@@ -568,7 +564,7 @@ def fetch_all_user_roadmaps(user_id, dynamodb):
 
             roadmap_response = dynamodb.Table('Roadmaps').get_item(
                 Key={'id': roadmap_id},
-                ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime, totalLessons'
+                ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, dailyTime, totalLessons'
             )
             roadmap = roadmap_response.get('Item')
 
@@ -582,8 +578,8 @@ def fetch_all_user_roadmaps(user_id, dynamodb):
                     'goal': roadmap['goal'],
                     'currentSkillLevel': roadmap['currentSkillLevel'],
                     'desiredSkillLevel': roadmap['desiredSkillLevel'],
-                    'currentLesson': roadmap['currentLesson'],
-                    'currentPhase': roadmap['currentPhase'],
+                    'currentLesson': user_roadmap['currentLesson'],
+                    'currentPhase': user_roadmap['currentPhase'],
                     'dailyTime': roadmap['dailyTime'],
                     'totalLessons': roadmap['totalLessons'],
                     'status': user_roadmap['status']
@@ -611,8 +607,6 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                 'goal': enhanced_roadmap['goal'],
                 'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
                 'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
-                'currentLesson': enhanced_roadmap['currentLesson'],
-                'currentPhase': enhanced_roadmap['currentPhase'],
                 'dailyTime': enhanced_roadmap['dailyTime'],
                 'phaseCount': enhanced_roadmap['phaseCount'],
                 'totalLessons': enhanced_roadmap['totalLessons']
