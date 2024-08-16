@@ -2,19 +2,41 @@ import json
 import boto3
 from boto3.dynamodb.conditions import Key
 import logging
+from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 def handler(event, context):
     try:
         http_method = event['httpMethod']
-        path_parameters = event.get('pathParameters', {})
-        roadmap_id = path_parameters.get('proxy+', "")
+        path = event.get('path', "")
+        
 
         if http_method == 'GET':
+            if path == '/allRoadmap':
+                roadmaps = convert_decimals(get_all_roadmap_details(dynamodb))
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps(roadmaps),
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            path_parameters = event.get('pathParameters', {})
+            roadmap_id = path_parameters.get('roadmapId', "")
             if roadmap_id:
                 # Get a single roadmap by ID
                 roadmap = get_roadmap(roadmap_id, dynamodb)
+                roadmap = convert_decimals(roadmap)
                 if roadmap:
                     return {
                         'statusCode': 200,
@@ -34,20 +56,29 @@ def handler(event, context):
                         }
                     }
             else:
-                # Get all roadmap IDs
-                roadmap_ids = get_all_roadmap_ids(dynamodb)
                 return {
-                    'statusCode': 200,
-                    'body': json.dumps(roadmap_ids),
+                    'statusCode': 400,
+                    'body': json.dumps({'error': 'roadmapId is required for this endpoint'}),
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     }
                 }
 
-        elif http_method == 'POST':
-            # Update a roadmap if roadmap_id exists; otherwise, create a new roadmap
+        if http_method == 'POST':
             roadmap_data = json.loads(event['body'])
+            if path == '/allRoadmap':
+                save_roadmap(roadmap_data, dynamodb)
+                return {
+                    'statusCode': 201,
+                    'body': json.dumps({'message': 'Roadmap created successfully'}),
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+            path_parameters = event.get('pathParameters', {})
+            roadmap_id = path_parameters.get('roadmapId', "")
             if roadmap_id:
                 update_roadmap(roadmap_id, roadmap_data, dynamodb)
                 return {
@@ -58,19 +89,12 @@ def handler(event, context):
                         'Access-Control-Allow-Origin': '*'
                     }
                 }
-            else:
-                save_roadmap(roadmap_data, dynamodb)
-                return {
-                    'statusCode': 201,
-                    'body': json.dumps({'message': 'Roadmap created successfully'}),
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                }
+        
+                
 
         elif http_method == 'DELETE':
-            # Delete a roadmap by ID
+            path_parameters = event.get('pathParameters', {})
+            roadmap_id = path_parameters.get('roadmapId', "")
             if roadmap_id:
                 delete_roadmap(roadmap_id, dynamodb)
                 return {
@@ -84,7 +108,7 @@ def handler(event, context):
             else:
                 return {
                     'statusCode': 400,
-                    'body': json.dumps({'error': 'roadmapid is required'}),
+                    'body': json.dumps({'error': 'roadmapId is required'}),
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
@@ -102,15 +126,17 @@ def handler(event, context):
             }
 
     except Exception as e:
-        logging.error(f"Error handling request: {str(e)}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': 'Internal server error', 'details': str(e)}),
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+            logger.error(f"Unhandled exception: {str(e)}")
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': 'Internal Server Error'}),
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                }
             }
-        }
+    
+   
         
 
 
@@ -136,6 +162,7 @@ def get_roadmap(roadmap_id, dynamodb):
             'currentLesson': roadmap['currentLesson'],
             'currentPhase': roadmap['currentPhase'],
             'dailyTime': roadmap['dailyTime'],
+            'phaseCount': roadmap['phaseCount'],
             'phases': []
         }
 
@@ -149,6 +176,8 @@ def get_roadmap(roadmap_id, dynamodb):
         for phase in phases:
             phase_object = {
                 'phaseDescription': phase['phaseDescription'],
+                'topicCount' : phase['topicCount'],
+                'phaseNumber' : phase['phaseNumber'],
                 'topics': []
             }
             phase_id = phase['phaseId']
@@ -163,6 +192,8 @@ def get_roadmap(roadmap_id, dynamodb):
                 topic_object = {
                     'topicName': topic['topicName'],
                     'searchResult' : topic['searchResult'],
+                    'topicNumber' : topic['topicNumber'],
+                    'infobitCount': topic['infobitCount'],
                     'infoBits': []
                 }
                 topic_id = topic['topicId']
@@ -220,7 +251,7 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
             UpdateExpression="SET title = :title, description = :description, imageURL = :imageURL, "
                              "estimatedLearningDuration = :estimatedLearningDuration, goal = :goal, "
                              "currentSkillLevel = :currentSkillLevel, desiredSkillLevel = :desiredSkillLevel, "
-                             "currentLesson = :currentLesson, currentPhase = :currentPhase, dailyTime = :dailyTime",
+                             "currentLesson = :currentLesson, currentPhase = :currentPhase, dailyTime = :dailyTime, phaseCount = :phaseCount",
             ExpressionAttributeValues={
                 ':title': updated_roadmap['title'],
                 ':description': updated_roadmap['description'],
@@ -232,6 +263,7 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                 ':currentLesson': updated_roadmap['currentLesson'],
                 ':currentPhase': updated_roadmap['currentPhase'],
                 ':dailyTime': updated_roadmap['dailyTime'],
+                ':phaseCount': updated_roadmap['phaseCount']
             }
         )
 
@@ -243,7 +275,8 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                     'roadmapId': roadmap_id,
                     'phaseNumber': phase_index + 1,
                     'phaseId': phase_id,
-                    'phaseDescription': phase['phaseDescription']
+                    'phaseDescription': phase['phaseDescription'],
+                    'topicCount':phase['topicCount']
                 }
             )
 
@@ -256,7 +289,8 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                         'topicNumber': topic_index + 1,
                         'topicId': topic_id,
                         'topicName': topic['topicName'],
-                        'searchResult': topic['searchResult']
+                        'searchResult': topic['searchResult'],
+                        'infobitCount': topic['infobitCount']
                     }
                 )
 
@@ -361,18 +395,125 @@ def delete_roadmap(roadmap_id, dynamodb):
         logging.error(f"Error while deleting roadmap: {str(e)}")
         return None
 
-def get_all_roadmap_ids(dynamodb):
+def get_all_roadmap_details(dynamodb):
     try:
         # Scan the Roadmaps table to get all items
         response = dynamodb.Table('Roadmaps').scan(
-            ProjectionExpression='id'
+            ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime'
         )
 
-        roadmap_ids = [item['id'] for item in response['Items']]
-
-        logging.info(f"Fetched {len(roadmap_ids)} roadmap IDs.")
-        return roadmap_ids
+        roadmap_details = []
+        for item in response['Items']:
+            roadmap_details.append({
+                'id': item['id'],
+                'title': item['title'],
+                'description': item['description'],
+                'imageURL': item['imageURL'],
+                'estimatedLearningDuration': item['estimatedLearningDuration'],
+                'goal': item['goal'],
+                'currentSkillLevel': item['currentSkillLevel'],
+                'desiredSkillLevel': item['desiredSkillLevel'],
+                'currentLesson': item['currentLesson'],
+                'currentPhase': item['currentPhase'],
+                'dailyTime': item['dailyTime'],
+                'phaseCount': item['phaseCount']
+            })
+        
+        logging.info(f"Fetched {len(roadmap_details)} roadmap details.")
+        return roadmap_details
 
     except Exception as e:
-        logging.error(f"Error while retrieving roadmap IDs: {str(e)}")
+        logging.error(f"Error while retrieving roadmap details: {str(e)}")
         return None
+
+def save_roadmap(enhanced_roadmap, dynamodb):
+
+    roadmap_id = str(uuid.uuid4())
+
+    # Save Roadmap
+    dynamodb.Table('Roadmaps').put_item(
+        Item={
+            'id': roadmap_id,
+            'title': enhanced_roadmap['title'],
+            'description': enhanced_roadmap['description'],
+            'imageURL': enhanced_roadmap['imageURL'],
+            'estimatedLearningDuration': enhanced_roadmap['estimatedLearningDuration'],
+            'goal': enhanced_roadmap['goal'],
+            'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
+            'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
+            'currentLesson': enhanced_roadmap['currentLesson'],
+            'currentPhase': enhanced_roadmap['currentPhase'],
+            'dailyTime': enhanced_roadmap['dailyTime'],
+            'phaseCount': enhanced_roadmap['phaseCount'],
+            'phaseNumber':  enhanced_roadmap['phaseNumber']
+        }
+    )
+
+    # Save Phases
+    for phase_index, phase in enumerate(enhanced_roadmap['phases']):
+        phase_id = f"{roadmap_id}#PHASE#{phase_index + 1}"
+        dynamodb.Table('Phases').put_item(
+            Item={
+                'roadmapId': roadmap_id,
+                'phaseNumber': phase_index + 1,
+                'phaseId': phase_id,
+                'phaseDescription': phase['phaseDescription'],
+                'topicCount': phase['topicCount']
+            }
+        )
+
+        # Save Topics
+        for topic_index, topic in enumerate(phase['topics']):
+            topic_id = f"{phase_id}#TOPIC#{topic_index + 1}"
+            dynamodb.Table('Topics').put_item(
+                Item={
+                    'phaseId': phase_id,
+                    'topicNumber': topic_index + 1,
+                    'topicId': topic_id,
+                    'topicName': topic['topicName'],
+                    'searchResult': topic['searchResult'],
+                    'infobitCount' : topic['infobitCount']
+                }
+            )
+
+            # Save InfoBits
+            for infobit_index, infobit in enumerate(topic['infoBits']):
+                infobit_id = f"{topic_id}#INFOBIT#{infobit_index + 1}"
+                dynamodb.Table('InfoBits').put_item(
+                    Item={
+                        'topicId': topic_id,
+                        'infoBitNumber': infobit_index + 1,
+                        'infoBitId': infobit_id,
+                        'text': infobit['text'],
+                        'keywords': infobit['keywords'],
+                        'example': infobit.get('example', "")
+                    }
+                )
+
+                # Save Quiz
+                quiz = infobit['quiz']
+                dynamodb.Table('Quizzes').put_item(
+                    Item={
+                        'infoBitId': infobit_id,
+                        'quizNumber':  infobit_index + 1,
+                        'text': quiz['text'],
+                        'type': quiz['type'],
+                        'options': quiz.get('options', ''),
+                        'answer': quiz['answer']
+                    }
+                )
+    logging.info("Roadmap saved to DB successfully")
+
+
+def convert_decimals(obj):
+    """
+    Recursively convert all Decimal values in a dictionary or list to float.
+    """
+    if isinstance(obj, list):
+        return [convert_decimals(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: convert_decimals(value) for key, value in obj.items()}
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    else:
+        return obj

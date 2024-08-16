@@ -511,6 +511,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
             'currentLesson': enhanced_roadmap['currentLesson'],
             'currentPhase': enhanced_roadmap['currentPhase'],
             'dailyTime': enhanced_roadmap['dailyTime'],
+            'phaseCount': enhanced_roadmap['phaseCount']
         }
     )
 
@@ -522,7 +523,8 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                 'roadmapId': roadmap_id,
                 'phaseNumber': phase_index + 1,
                 'phaseId': phase_id,
-                'phaseDescription': phase['phaseDescription']
+                'phaseDescription': phase['phaseDescription'],
+                'topicCount': phase['topicCount']
             }
         )
 
@@ -535,7 +537,8 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                     'topicNumber': topic_index + 1,
                     'topicId': topic_id,
                     'topicName': topic['topicName'],
-                    'searchResult': topic['searchResult']
+                    'searchResult': topic['searchResult'],
+                    'infobitCount' : topic['infobitCount']
                 }
             )
 

@@ -129,6 +129,22 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_dbOperations_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "dbOperations"
+        }
+      ]
+    },
+    "AMPLIFY_function_dbOperations_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "dbOperations"
+        }
+      ]
+    },
     "AMPLIFY_function_infiniteLambda1_deploymentBucketName": {
       "usedBy": [
         {
