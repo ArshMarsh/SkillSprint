@@ -95,7 +95,7 @@
             "Ref": "functionskillsprintbackinfiniteLayerArn"
           }
         ],
-        "Timeout": 25
+        "Timeout": 480  
       }
     },
     "LambdaExecutionRole": {
