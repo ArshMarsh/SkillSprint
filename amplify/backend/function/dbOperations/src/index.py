@@ -62,8 +62,7 @@ def handler(event, context):
                     }
             
             if user_id and '/allUserRoadmaps/' in path:
-                
-                user_roadmaps = convert_decimals(fetch_user_roadmaps(user_id, dynamodb))
+                user_roadmaps = convert_decimals(fetch_all_user_roadmaps(user_id, dynamodb))
                 if user_roadmaps:
                     return {
                         'statusCode': 200,
@@ -83,12 +82,12 @@ def handler(event, context):
                         }
                     }
             
-            if user_id and '/userRoadmap/' in path:
-                user_roadmap = get_user_roadmap(user_id, dynamodb)
-                if user_roadmaps:
+            if user_id and roadmap_id and '/userRoadmap/' in path:
+                user_roadmap = convert_decimals(get_user_roadmap(user_id, roadmap_id, dynamodb))
+                if user_roadmap:
                     return {
                         'statusCode': 200,
-                        'body': json.dumps(user_roadmaps),
+                        'body': json.dumps(user_roadmap),
                         'headers': {
                             'Content-Type': 'application/json',
                             'Access-Control-Allow-Origin': '*'
@@ -138,8 +137,9 @@ def handler(event, context):
                     }
                 }
 
-            if user_id and '/userRoadmap/' in path:
-                #update_user_roadmap(user_id, roadmap_id, roadmap_data, dynamodb)
+            if user_id and roadmap_id and '/userRoadmap/' in path:
+
+                update_user_roadmap(user_id, roadmap_id, roadmap_data, dynamodb)
                 return {
                     'statusCode': 200,
                     'body': json.dumps({'message': 'User roadmap updated successfully'}),
@@ -161,8 +161,8 @@ def handler(event, context):
                     }
                 }
             
-            if user_id and '/userRoadmap/' in path:
-                #delete_user_roadmap(user_id, roadmap_id, dynamodb)
+            if user_id and roadmap_id and '/userRoadmap/' in path:
+                delete_user_roadmap(user_id, roadmap_id, dynamodb)
                 return {
                     'statusCode': 200,
                     'body': json.dumps({'message': 'User roadmap deleted successfully'}),
@@ -208,6 +208,7 @@ def get_roadmap(roadmap_id, dynamodb):
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
 
         original_object = {
+            'id' : roadmap_id
             'title': roadmap['title'],
             'description': roadmap['description'],
             'imageURL': roadmap['imageURL'],
@@ -223,13 +224,11 @@ def get_roadmap(roadmap_id, dynamodb):
             'phases': []
         }
 
-        # Query the phases
         phases_response = dynamodb.Table('Phases').query(
             KeyConditionExpression=Key('roadmapId').eq(roadmap_id)
         )
         phases = phases_response['Items']
 
-        # For each phase, get the topics
         for phase in phases:
             phase_object = {
                 'phaseDescription': phase['phaseDescription'],
@@ -244,7 +243,6 @@ def get_roadmap(roadmap_id, dynamodb):
             )
             topics = topics_response['Items']
 
-            # For each topic, get the infoBits
             for topic in topics:
                 topic_object = {
                     'topicName': topic['topicName'],
@@ -260,7 +258,6 @@ def get_roadmap(roadmap_id, dynamodb):
                 )
                 infobits = infobits_response['Items']
 
-                # For each infoBit, get the quiz
                 for infobit in infobits:
                     quiz_response = dynamodb.Table('Quizzes').query(
                         KeyConditionExpression=Key('infoBitId').eq(infobit['infoBitId'])
@@ -268,6 +265,7 @@ def get_roadmap(roadmap_id, dynamodb):
                     quiz = quiz_response['Items'][0]
 
                     infobit_object = {
+                        'infoBitId': infobit['infoBitId'],
                         'text': infobit['text'],
                         'keywords': infobit['keywords'],
                         'example': infobit.get('example', ''),
@@ -289,12 +287,38 @@ def get_roadmap(roadmap_id, dynamodb):
         logger.error(f"Error: While retrieving from DB: {str(e)}")
         return None
 
+def get_user_roadmap(user_id, roadmap_id, dynamodb):
+    try:
+        roadmap = get_roadmap(roadmap_id, dynamodb)
+        if not roadmap:
+            raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
+        
+        user_roadmap_response = dynamodb.Table('UserRoadmaps').get_item(
+            Key={'userId': user_id, 'roadmapId': roadmap_id}
+        )
+        user_roadmap = user_roadmap_response.get('Item')
+        if not user_roadmap:
+            raise ValueError(f"User roadmap not found for user {user_id} and roadmap {roadmap_id}.")
+        
+        roadmap['status'] = user_roadmap['status']
+        
+        for phase in roadmap['phases']:
+            for topic in phase['topics']:
+                for infobit in topic['infoBits']:
+                    infobit_id = infobit['infoBitId']
+                    user_answer = user_roadmap['quizAnswers'].get(infobit_id, '')
+                    infobit['userAnswer'] = user_answer
+        
+        logging.info(f"Complete roadmap for user {user_id} and roadmap {roadmap_id} fetched successfully.")
+        return roadmap
 
+    except Exception as e:
+        logging.error(f"Error fetching complete user roadmap: {str(e)}")
+        return None
 
 
 def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
     try:
-        # Fetch the existing roadmap
         existing_roadmap_response = dynamodb.Table('Roadmaps').get_item(
             Key={'id': roadmap_id}
         )
@@ -302,7 +326,6 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
         if not existing_roadmap:
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
         
-        # Update the roadmap attributes
         dynamodb.Table('Roadmaps').update_item(
             Key={'id': roadmap_id},
             UpdateExpression="SET title = :title, description = :description, imageURL = :imageURL, "
@@ -385,6 +408,39 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
         logging.error(f"Error while updating roadmap: {str(e)}")
         return None
 
+
+def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
+    try:
+        quiz_answers = {}
+        for phase in user_roadmap['phases']:
+            for topic in phase['topics']:
+                for infobit in topic['infoBits']:
+                    infobit_id = infobit['infoBitId']
+                    user_answer = infobit.get('userAnswer', '')
+                    quiz_answers[infobit_id] = user_answer
+        
+        dynamodb.Table('UserRoadmaps').update_item(
+            Key={
+                'userId': user_id,
+                'roadmapId': roadmap_id
+            },
+            UpdateExpression="SET #status = :status, quizAnswers = :quizAnswers",
+            ExpressionAttributeNames={
+                '#status': 'status'  
+            },
+            ExpressionAttributeValues={
+                ':status': user_roadmap.get('status', 'ongoing'),  
+                ':quizAnswers': quiz_answers  
+            }
+        )
+
+        logging.info(f"User roadmap for user {user_id} and roadmap {roadmap_id} updated successfully.")
+    
+    except Exception as e:
+        logging.error(f"Error updating user roadmap for user {user_id} and roadmap {roadmap_id}: {str(e)}")
+        return None
+
+
 def delete_roadmap(roadmap_id, dynamodb):
     try:
         # Fetch the existing roadmap
@@ -442,7 +498,6 @@ def delete_roadmap(roadmap_id, dynamodb):
                 Key={'roadmapId': roadmap_id, 'phaseId': phase_id}
             )
 
-        # Delete Roadmap
         dynamodb.Table('Roadmaps').delete_item(
             Key={'id': roadmap_id}
         )
@@ -451,6 +506,20 @@ def delete_roadmap(roadmap_id, dynamodb):
 
     except Exception as e:
         logging.error(f"Error while deleting roadmap: {str(e)}")
+        return None
+
+def delete_user_roadmap(user_id, roadmap_id, dynamodb):
+    try:
+        dynamodb.Table('UserRoadmaps').delete_item(
+            Key={
+                'userId': user_id,
+                'roadmapId': roadmap_id
+            }
+        )
+        logging.info(f"User {user_id}'s relationship with roadmap {roadmap_id} deleted successfully.")
+
+    except Exception as e:
+        logging.error(f"Error while deleting user-roadmap relationship for user {user_id} and roadmap {roadmap_id}: {str(e)}")
         return None
 
 def get_all_roadmap_details(dynamodb):
@@ -485,7 +554,7 @@ def get_all_roadmap_details(dynamodb):
         logging.error(f"Error while retrieving roadmap details: {str(e)}")
         return None
 
-def fetch_user_roadmaps(user_id, dynamodb):
+def fetch_all_user_roadmaps(user_id, dynamodb):
     try:
         user_roadmaps_response = dynamodb.Table('UserRoadmaps').query(
             KeyConditionExpression=Key('userId').eq(user_id)

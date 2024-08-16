@@ -14,6 +14,20 @@
       "permissions": {
         "setting": "open"
       }
+    },
+    "/allUserRoadmaps/{userId}": {
+      "name": "/allUserRoadmaps/{userId}",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/userRoadmap/{userId}/{roadmapId}": {
+      "name": "/userRoadmap/{userId}/{roadmapId}",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
     }
   }
 }
