@@ -23,7 +23,7 @@ You are an education expert tasked with designing a personalized learning path t
 <TASK/>
 
 <INPUT>
-skillName (string): The name of the skill the user wants to learn.
+title (string): The name of the skill the user wants to learn.
 goal (string): The objective the user hopes to achieve after completing the learning roadmap.
 currentSkillLevel (string): The user's initial proficiency in the skill.
 desiredSkillLevel (string): The proficiency level the user aims to reach.
@@ -132,7 +132,7 @@ PROMPT_QUIZ = """
     <TASK/>
 
     <INPUT>
-    skillName: The name of the skill the user wants to learn.
+    title: The name of the skill the user wants to learn.
     goal: The objective the user hopes to achieve after completing the learning roadmap.
     currentSkillLevel: The user's initial proficiency in the skill.
     desiredSkillLevel: The proficiency level the user aims to reach.
@@ -306,7 +306,7 @@ def handler(event, context):
         enhanced_roadmap = enhance_roadmap(appended_roadmap)
         for phase in enhanced_roadmap['phases']:
             input_quiz = {
-                'skillName': input_data['skillName'],
+                'title': input_data['title'],
                 'goal': input_data['goal'],
                 'currentSkillLevel': input_data['currentSkillLevel'],
                 'desiredSkillLevel': input_data['desiredSkillLevel'],
