@@ -15,15 +15,15 @@
       "function": {
         "infiniteLambda": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/infiniteLambda-544d3664706d2b346535-build.zip"
+          "s3Key": "amplify-builds/infiniteLambda-66643145746846304b36-build.zip"
         },
         "quizFlow": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/quizFlow-6563324757415a614846-build.zip"
+          "s3Key": "amplify-builds/quizFlow-4e38445a717747613666-build.zip"
         },
         "skillsprintbackinfiniteLayer": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersiond6db08db-build.zip"
+          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersionb8316856-build.zip"
         },
         "testfunc": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
@@ -33,7 +33,10 @@
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
           "s3Key": "amplify-builds/infiniteLambda1-66437a534c344c57504f-build.zip"
         },
-        "dbOperations": {}
+        "dbOperations": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/dbOperations-673450326a2b50524858-build.zip"
+        }
       }
     }
   },
