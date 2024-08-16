@@ -262,7 +262,7 @@ def handler(event, context):
 
         data = json.loads(event['body'])
         user_id = data['userId']
-        
+
         input_data = {key: value for key, value in data.items() if key != "userId"}
 
         
@@ -336,7 +336,7 @@ def handler(event, context):
             
         final_topic = {
             "topicName": "Final Comprehensive Quiz",
-            "topicNumber": "1",
+            "topicNumber": 1,
             "topicSearchTerm" : "python programming tutorial",
             "infobitCount": len(last_quiz['quizzes']),
             "infoBits": []
@@ -497,84 +497,102 @@ def enhance_roadmap(json_input):
         logger.error(f"Error: While adding phase counts to roadmap: {str(ex)}")
         raise
 
-def save_roadmap(enhanced_roadmap, dynamodb):
+def save_roadmap(enhanced_roadmap, dynamodb, user_id):
+    try:
+        roadmap_id = str(uuid.uuid4())
 
-    roadmap_id = str(uuid.uuid4())
-
-    # Save Roadmap
-    dynamodb.Table('Roadmaps').put_item(
-        Item={
-            'id': roadmap_id,
-            'title': enhanced_roadmap['title'],
-            'description': enhanced_roadmap['description'],
-            'imageURL': enhanced_roadmap['imageURL'],
-            'estimatedLearningDuration': enhanced_roadmap['estimatedLearningDuration'],
-            'goal': enhanced_roadmap['goal'],
-            'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
-            'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
-            'currentLesson': enhanced_roadmap['currentLesson'],
-            'currentPhase': enhanced_roadmap['currentPhase'],
-            'dailyTime': enhanced_roadmap['dailyTime'],
-            'phaseCount': enhanced_roadmap['phaseCount'],
-            'totalLessons': enhanced_roadmap['totalLessons']
-        }
-    )
-
-    # Save Phases
-    for phase_index, phase in enumerate(enhanced_roadmap['phases']):
-        phase_id = f"{roadmap_id}#PHASE#{phase_index + 1}"
-        dynamodb.Table('Phases').put_item(
+        # Save Roadmap
+        dynamodb.Table('Roadmaps').put_item(
             Item={
-                'roadmapId': roadmap_id,
-                'phaseNumber': phase_index + 1,
-                'phaseId': phase_id,
-                'phaseDescription': phase['phaseDescription'],
-                'topicCount': phase['topicCount']
+                'id': roadmap_id,
+                'title': enhanced_roadmap['title'],
+                'description': enhanced_roadmap['description'],
+                'imageURL': enhanced_roadmap['imageURL'],
+                'estimatedLearningDuration': enhanced_roadmap['estimatedLearningDuration'],
+                'goal': enhanced_roadmap['goal'],
+                'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
+                'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
+                'currentLesson': enhanced_roadmap['currentLesson'],
+                'currentPhase': enhanced_roadmap['currentPhase'],
+                'dailyTime': enhanced_roadmap['dailyTime'],
+                'phaseCount': enhanced_roadmap['phaseCount'],
+                'totalLessons': enhanced_roadmap['totalLessons']
             }
         )
 
-        # Save Topics
-        for topic_index, topic in enumerate(phase['topics']):
-            topic_id = f"{phase_id}#TOPIC#{topic_index + 1}"
-            dynamodb.Table('Topics').put_item(
+        # Save Phases
+        for phase_index, phase in enumerate(enhanced_roadmap['phases']):
+            phase_id = f"{roadmap_id}#PHASE#{phase_index + 1}"
+            dynamodb.Table('Phases').put_item(
                 Item={
+                    'roadmapId': roadmap_id,
+                    'phaseNumber': phase_index + 1,
                     'phaseId': phase_id,
-                    'topicNumber': topic['topicNumber'],
-                    'topicId': topic_id,
-                    'topicName': topic['topicName'],
-                    'searchResult': topic['searchResult'],
-                    'infobitCount' : topic['infobitCount']
+                    'phaseDescription': phase['phaseDescription'],
+                    'topicCount': phase['topicCount']
                 }
             )
 
-            # Save InfoBits
-            for infobit_index, infobit in enumerate(topic['infoBits']):
-                infobit_id = f"{topic_id}#INFOBIT#{infobit_index + 1}"
-                dynamodb.Table('InfoBits').put_item(
+            # Save Topics
+            for topic_index, topic in enumerate(phase['topics']):
+                topic_id = f"{phase_id}#TOPIC#{topic_index + 1}"
+                dynamodb.Table('Topics').put_item(
                     Item={
+                        'phaseId': phase_id,
+                        'topicNumber': int(topic['topicNumber']),
                         'topicId': topic_id,
-                        'infoBitNumber': infobit_index + 1,
-                        'infoBitId': infobit_id,
-                        'text': infobit['text'],
-                        'keywords': infobit['keywords'],
-                        'example': infobit.get('example', "")
+                        'topicName': topic['topicName'],
+                        'searchResult': topic['searchResult'],
+                        'infobitCount' : topic['infobitCount']
                     }
                 )
 
-                # Save Quiz
-                quiz = infobit['quiz']
-                dynamodb.Table('Quizzes').put_item(
-                    Item={
-                        'infoBitId': infobit_id,
-                        'quizNumber':  infobit_index + 1,
-                        'text': quiz['text'],
-                        'type': quiz['type'],
-                        'options': quiz.get('options', ''),
-                        'answer': quiz['answer']
-                    }
-                )
-    logging.info("Roadmap saved to DB successfully")
+                # Save InfoBits
+                for infobit_index, infobit in enumerate(topic['infoBits']):
+                    infobit_id = f"{topic_id}#INFOBIT#{infobit_index + 1}"
+                    dynamodb.Table('InfoBits').put_item(
+                        Item={
+                            'topicId': topic_id,
+                            'infoBitNumber': infobit_index + 1,
+                            'infoBitId': infobit_id,
+                            'text': infobit['text'],
+                            'keywords': infobit['keywords'],
+                            'example': infobit.get('example', "")
+                        }
+                    )
 
+                    # Save Quiz
+                    quiz = infobit['quiz']
+                    dynamodb.Table('Quizzes').put_item(
+                        Item={
+                            'infoBitId': infobit_id,
+                            'quizNumber':  infobit_index + 1,
+                            'text': quiz['text'],
+                            'type': quiz['type'],
+                            'options': quiz.get('options', ''),
+                            'answer': quiz['answer']
+                        }
+                    )
+            
+        logging.info("Roadmap saved to DB successfully")
+        save_user_roadmap(user_id, roadmap_id, dynamodb)
+    except Exception as e:
+        logging.error(f"Error saving to db: {str(e)}")
+
+
+def save_user_roadmap(user_id, roadmap_id, dynamodb):
+    try:
+        dynamodb.Table('UserRoadmaps').put_item(
+            Item={
+                'userId': user_id,
+                'roadmapId': roadmap_id,
+                'status': 'ongoing',  # Default value
+                'quizAnswers': {}  # Default empty map
+            }
+        )
+        logging.info(f"User {user_id} associated with roadmap {roadmap_id} successfully.")
+    except Exception as e:
+        logging.error(f"Error saving user-roadmap association: {str(e)}")
 
 
 
