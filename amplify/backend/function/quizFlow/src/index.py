@@ -361,7 +361,7 @@ def handler(event, context):
         lambda_response = invoke_next_lambda(enhanced_roadmap)
         if int(lambda_response['statusCode']) == 200:
             #save roadmap to DB
-            save_roadmap(json.loads(lambda_response['body']), dynamodb)
+            save_roadmap(json.loads(lambda_response['body']), user_id, dynamodb)
             logging.info("Final Roadmap Generated Successfully")
 
         #error invoked
@@ -497,7 +497,7 @@ def enhance_roadmap(json_input):
         logger.error(f"Error: While adding phase counts to roadmap: {str(ex)}")
         raise
 
-def save_roadmap(enhanced_roadmap, dynamodb, user_id):
+def save_roadmap(enhanced_roadmap, user_id, dynamodb):
     try:
         roadmap_id = str(uuid.uuid4())
 

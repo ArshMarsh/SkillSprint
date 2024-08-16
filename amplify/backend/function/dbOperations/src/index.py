@@ -40,7 +40,6 @@ def handler(event, context):
                 }
             
             if roadmap_id and '/roadmap/' in path:
-                # Get a single roadmap by ID
                 roadmap = get_roadmap(roadmap_id, dynamodb)
                 roadmap = convert_decimals(roadmap)
                 if roadmap:
@@ -62,9 +61,30 @@ def handler(event, context):
                         }
                     }
             
-            elif user_id and '/userRoadmap/' in path:
-                user_roadmaps = None
-                # user_roadmaps = get_user_roadmap(user_id, dynamodb)
+            if user_id and '/allUserRoadmaps/' in path:
+                
+                user_roadmaps = convert_decimals(fetch_user_roadmaps(user_id, dynamodb))
+                if user_roadmaps:
+                    return {
+                        'statusCode': 200,
+                        'body': json.dumps(user_roadmaps),
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        }
+                    }
+                else:
+                    return {
+                        'statusCode': 404,
+                        'body': json.dumps({'error': 'User roadmaps not found'}),
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        }
+                    }
+            
+            if user_id and '/userRoadmap/' in path:
+                user_roadmap = get_user_roadmap(user_id, dynamodb)
                 if user_roadmaps:
                     return {
                         'statusCode': 200,
@@ -465,7 +485,49 @@ def get_all_roadmap_details(dynamodb):
         logging.error(f"Error while retrieving roadmap details: {str(e)}")
         return None
 
-def save_roadmap(enhanced_roadmap, dynamodb, user_id):
+def fetch_user_roadmaps(user_id, dynamodb):
+    try:
+        user_roadmaps_response = dynamodb.Table('UserRoadmaps').query(
+            KeyConditionExpression=Key('userId').eq(user_id)
+        )
+        user_roadmaps = user_roadmaps_response['Items']
+
+        roadmap_details = []
+
+        for user_roadmap in user_roadmaps:
+            roadmap_id = user_roadmap['roadmapId']
+
+            roadmap_response = dynamodb.Table('Roadmaps').get_item(
+                Key={'id': roadmap_id},
+                ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, currentLesson, currentPhase, dailyTime, totalLessons'
+            )
+            roadmap = roadmap_response.get('Item')
+
+            if roadmap:
+                roadmap_details.append({
+                    'id': roadmap['id'],
+                    'title': roadmap['title'],
+                    'description': roadmap['description'],
+                    'imageURL': roadmap['imageURL'],
+                    'estimatedLearningDuration': roadmap['estimatedLearningDuration'],
+                    'goal': roadmap['goal'],
+                    'currentSkillLevel': roadmap['currentSkillLevel'],
+                    'desiredSkillLevel': roadmap['desiredSkillLevel'],
+                    'currentLesson': roadmap['currentLesson'],
+                    'currentPhase': roadmap['currentPhase'],
+                    'dailyTime': roadmap['dailyTime'],
+                    'totalLessons': roadmap['totalLessons'],
+                    'status': user_roadmap['status']
+                })
+
+        logging.info(f"Fetched {len(roadmap_details)} roadmaps for user {user_id}.")
+        return roadmap_details
+
+    except Exception as e:
+        logging.error(f"Error while fetching roadmaps for user {user_id}: {str(e)}")
+        return None
+
+def save_roadmap(enhanced_roadmap, dynamodb):
     try:
         roadmap_id = str(uuid.uuid4())
 
@@ -543,24 +605,8 @@ def save_roadmap(enhanced_roadmap, dynamodb, user_id):
                     )
             
         logging.info("Roadmap saved to DB successfully")
-        save_user_roadmap(user_id, roadmap_id, dynamodb)
     except Exception as e:
         logging.error(f"Error saving to db: {str(e)}")
-
-
-def save_user_roadmap(user_id, roadmap_id, dynamodb):
-    try:
-        dynamodb.Table('UserRoadmaps').put_item(
-            Item={
-                'userId': user_id,
-                'roadmapId': roadmap_id,
-                'status': 'ongoing',  # Default value
-                'quizAnswers': {}  # Default empty map
-            }
-        )
-        logging.info(f"User {user_id} associated with roadmap {roadmap_id} successfully.")
-    except Exception as e:
-        logging.error(f"Error saving user-roadmap association: {str(e)}")
 
 
 
