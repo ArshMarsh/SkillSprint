@@ -6,7 +6,8 @@ from requests.exceptions import HTTPError
 def search_resources(search_query):
     try:
         google_results = []
-        for result in search(search_query, advanced=True, region="us", num_results=3):
+        google_searchs = search(search_query, advanced=True, region="us", num_results=3)
+        for result in google_searchs :
             google_results.append({
                 "title": result.title,
                 "url": result.url,

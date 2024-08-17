@@ -28,6 +28,13 @@
       "permissions": {
         "setting": "open"
       }
+    },
+    "/roadmapFlow/{userId}": {
+      "name": "/roadmapFlow/{userId}",
+      "lambdaFunction": "quizFlow",
+      "permissions": {
+        "setting": "open"
+      }
     }
   }
 }

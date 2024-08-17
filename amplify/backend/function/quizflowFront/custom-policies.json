@@ -1,0 +1,6 @@
+[
+  {
+    "Action": ["lambda:InvokeFunction"],
+    "Resource": ["arn:aws:lambda:*:*:function:*"]
+  }
+]

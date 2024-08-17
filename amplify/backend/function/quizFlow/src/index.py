@@ -32,7 +32,7 @@ dailyTime (string): the amount of daily time the user is going to be spending on
 <INPUT/>
 
 <OUTPUT>
-title: The title of the learning roadmap taken from INPUT .(no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
+title: The title of the learning roadmap.(no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
 description:  A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
 imageURL: A URL linking to an image online that can be used as the cover for this learning roadmap.
 phases: Array of objects. Each object represents a phase in the learning roadmap. Atleast 4.

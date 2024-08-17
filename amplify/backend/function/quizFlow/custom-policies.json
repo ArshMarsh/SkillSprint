@@ -21,7 +21,8 @@
       "dynamodb:GetItem",
       "dynamodb:Query",
       "dynamodb:UpdateItem",
-      "dynamodb:DeleteItem"
+      "dynamodb:DeleteItem",
+      "dynamodb:Scan"
     ],
     "Resource": [
       "arn:aws:dynamodb:*:*:table/*"

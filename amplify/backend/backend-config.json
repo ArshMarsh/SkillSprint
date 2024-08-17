@@ -23,6 +23,14 @@
           ],
           "category": "function",
           "resourceName": "dbOperations"
+        },
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "quizFlow"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -37,20 +45,6 @@
           ],
           "category": "function",
           "resourceName": "infiniteLambda"
-        }
-      ],
-      "providerPlugin": "awscloudformation",
-      "service": "API Gateway"
-    },
-    "quizFlow": {
-      "dependsOn": [
-        {
-          "attributes": [
-            "Name",
-            "Arn"
-          ],
-          "category": "function",
-          "resourceName": "quizFlow"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -113,6 +107,11 @@
       "service": "Lambda"
     },
     "quizFlow": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "quizflowFront": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"

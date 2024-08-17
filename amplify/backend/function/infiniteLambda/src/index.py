@@ -32,7 +32,7 @@ def handler(event, context):
             }
 
         all_processed = process_topics(lambda_input['inputData']['phases'])
-
+        logger.info(f"proccessed searches:{lambda_input}")
         if not all_processed:
             lambda_input["lambdaIndex"] = lambda_input["lambdaIndex"] + 1
             lambda_response = invoke_next_lambda(lambda_input)
