@@ -283,7 +283,7 @@ def get_roadmap(roadmap_id, dynamodb):
 
     except Exception as e:
         logger.error(f"Error: While retrieving from DB: {str(e)}")
-        return None
+        raise
 
 def get_user_roadmap(user_id, roadmap_id, dynamodb):
     try:
@@ -313,7 +313,7 @@ def get_user_roadmap(user_id, roadmap_id, dynamodb):
 
     except Exception as e:
         logging.error(f"Error fetching complete user roadmap: {str(e)}")
-        return None
+        raise
 
 
 def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
@@ -324,8 +324,8 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
         existing_roadmap = existing_roadmap_response.get('Item')
         if not existing_roadmap:
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
-        
-        dynamodb.Table('Roadmaps').update_item(
+        updated_roadmap = convert_decimals(updated_roadmap)
+        response = dynamodb.Table('Roadmaps').update_item(
             Key={'id': roadmap_id},
             UpdateExpression="SET title = :title, description = :description, imageURL = :imageURL, "
                              "estimatedLearningDuration = :estimatedLearningDuration, goal = :goal, "
@@ -342,7 +342,8 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                 ':dailyTime': updated_roadmap['dailyTime'],
                 ':phaseCount': updated_roadmap['phaseCount'],
                 ':totalLessons': updated_roadmap['totalLessons']
-            }
+            },
+            ReturnValues="UPDATED_NEW"
         )
 
         # Update or recreate Phases, Topics, InfoBits, and Quizzes
@@ -400,10 +401,10 @@ def update_roadmap(roadmap_id, updated_roadmap, dynamodb):
                     )
 
         logging.info(f"Roadmap with ID {roadmap_id} updated successfully.")
-
+        logging.info(f"dynamodb response= {response}")
     except Exception as e:
-        logging.error(f"Error while updating roadmap: {str(e)}")
-        return None
+        raise
+
 
 
 def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
@@ -416,28 +417,30 @@ def update_user_roadmap(user_id, roadmap_id, user_roadmap, dynamodb):
                     user_answer = infobit.get('userAnswer', '')
                     quiz_answers[infobit_id] = user_answer
         
-        dynamodb.Table('UserRoadmaps').update_item(
+        response = dynamodb.Table('UserRoadmaps').update_item(
             Key={
                 'userId': user_id,
                 'roadmapId': roadmap_id
             },
-            UpdateExpression="SET currentLesson = :currentLesson, currentPhase = :currentPhase, quizAnswers = :quizAnswers, #status = :status ",
+            UpdateExpression="SET currentLesson = :currentLesson, currentPhase = :currentPhase, quizAnswers = :quizAnswers, #status = :status",
             ExpressionAttributeNames={
                 '#status': 'status'  
             },
             ExpressionAttributeValues={
                 ':status': user_roadmap.get('status', 'ongoing'),  
                 ':quizAnswers': quiz_answers,
-                ':currrentLesson': user_roadmap['currentLesson'],
-                ':currentPhase' : user_roadmap['currentPhase']
-            }
+                ':currentLesson': user_roadmap['currentLesson'],
+                ':currentPhase': user_roadmap['currentPhase']
+            },
+            ReturnValues="UPDATED_NEW"
         )
 
         logging.info(f"User roadmap for user {user_id} and roadmap {roadmap_id} updated successfully.")
-    
+        logging.info(f"DynamoDB update response: {response}")
+
     except Exception as e:
         logging.error(f"Error updating user roadmap for user {user_id} and roadmap {roadmap_id}: {str(e)}")
-        return None
+        raise
 
 
 def delete_roadmap(roadmap_id, dynamodb):
@@ -505,7 +508,7 @@ def delete_roadmap(roadmap_id, dynamodb):
 
     except Exception as e:
         logging.error(f"Error while deleting roadmap: {str(e)}")
-        return None
+        raise
 
 def delete_user_roadmap(user_id, roadmap_id, dynamodb):
     try:
@@ -519,7 +522,7 @@ def delete_user_roadmap(user_id, roadmap_id, dynamodb):
 
     except Exception as e:
         logging.error(f"Error while deleting user-roadmap relationship for user {user_id} and roadmap {roadmap_id}: {str(e)}")
-        return None
+        raise
 
 def get_all_roadmap_details(dynamodb):
     try:
@@ -549,7 +552,7 @@ def get_all_roadmap_details(dynamodb):
 
     except Exception as e:
         logging.error(f"Error while retrieving roadmap details: {str(e)}")
-        return None
+        raise
 
 def fetch_all_user_roadmaps(user_id, dynamodb):
     try:
@@ -591,7 +594,7 @@ def fetch_all_user_roadmaps(user_id, dynamodb):
 
     except Exception as e:
         logging.error(f"Error while fetching roadmaps for user {user_id}: {str(e)}")
-        return None
+        raise
 
 def save_roadmap(enhanced_roadmap, dynamodb):
     try:
@@ -671,7 +674,7 @@ def save_roadmap(enhanced_roadmap, dynamodb):
         logging.info("Roadmap saved to DB successfully")
     except Exception as e:
         logging.error(f"Error saving to db: {str(e)}")
-
+        raise
 
 
 def convert_decimals(obj):
