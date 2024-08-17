@@ -20,6 +20,7 @@ logger.addHandler(console_handler)
 PROMPT_SKELETON = """
     <TASK>
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
+make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
 <TASK/>
 
 <INPUT>
@@ -70,6 +71,7 @@ You are required to generate 4-5 infobits for each topicOutline.
 Each infobit should include a short text explaining the topic outline, 
 along with relevant keywords extracted from this text. Additionally, 
 optionally add an example in each infobit wherever an example would help explaining the infobit.
+make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
 <TASK/>
 
 <INPUT>

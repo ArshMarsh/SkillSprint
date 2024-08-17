@@ -30,7 +30,7 @@
             "Arn"
           ],
           "category": "function",
-          "resourceName": "quizFlow"
+          "resourceName": "quizflowFront"
         }
       ],
       "providerPlugin": "awscloudformation",
