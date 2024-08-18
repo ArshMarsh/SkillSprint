@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "paths": {
+    "/allRoadmap": {
+      "name": "/allRoadmap",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/roadmap/{roadmapId}": {
+      "name": "/roadmap/{roadmapId}",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/allUserRoadmaps/{userId}": {
+      "name": "/allUserRoadmaps/{userId}",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/userRoadmap/{userId}/{roadmapId}": {
+      "name": "/userRoadmap/{userId}/{roadmapId}",
+      "lambdaFunction": "dbOperations",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/roadmapFlow/{userId}": {
+      "name": "/roadmapFlow/{userId}",
+      "lambdaFunction": "quizflowFront",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/resume/{userId}": {
+      "name": "/resume/{userId}",
+      "lambdaFunction": "dbResume",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

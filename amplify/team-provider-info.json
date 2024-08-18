@@ -1,4 +1,47 @@
 {
+  "frontend": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-skillsprintback-frontend-08f11-authRole",
+      "UnauthRoleArn": "arn:aws:iam::905418018509:role/amplify-skillsprintback-frontend-08f11-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::905418018509:role/amplify-skillsprintback-frontend-08f11-authRole",
+      "Region": "eu-central-1",
+      "DeploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+      "UnauthRoleName": "amplify-skillsprintback-frontend-08f11-unauthRole",
+      "StackName": "amplify-skillsprintback-frontend-08f11",
+      "StackId": "arn:aws:cloudformation:eu-central-1:905418018509:stack/amplify-skillsprintback-frontend-08f11/829b93c0-5b50-11ef-bc20-067d3d1ddd45",
+      "AmplifyAppId": "d2nyzocipcqvn2"
+    },
+    "categories": {
+      "function": {
+        "dbOperations": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/dbOperations-794c624667766c4d6a63-build.zip"
+        },
+        "infiniteLambda": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/infiniteLambda-66643145746846304b36-build.zip"
+        },
+        "infiniteLambda1": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/infiniteLambda1-66437a534c344c57504f-build.zip"
+        },
+        "quizFlow": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/quizFlow-4e38445a717747613666-build.zip"
+        },
+        "skillsprintbackinfiniteLayer": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersiondbee9848-build.zip"
+        },
+        "testfunc": {
+          "deploymentBucketName": "amplify-skillsprintback-frontend-08f11-deployment",
+          "s3Key": "amplify-builds/testfunc-6d4f566e4a3668494650-build.zip"
+        },
+        "quizflowFront": {},
+        "dbResume": {}
+      }
+    }
+  },
   "test": {
     "awscloudformation": {
       "AuthRoleName": "amplify-skillsprintback-test-e017b-authRole",
@@ -15,20 +58,25 @@
       "function": {
         "infiniteLambda": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/infiniteLambda-41564d707768737a6141-build.zip"
+          "s3Key": "amplify-builds/infiniteLambda-544d3664706d2b346535-build.zip"
         },
         "quizFlow": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/quizFlow-426174696e48397a4857-build.zip"
+          "s3Key": "amplify-builds/quizFlow-6563324757415a614846-build.zip"
         },
         "skillsprintbackinfiniteLayer": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersion7ba1ca68-build.zip"
+          "s3Key": "amplify-builds/skillsprintbackinfiniteLayer-LambdaLayerVersiond6db08db-build.zip"
         },
         "testfunc": {
           "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
-          "s3Key": "amplify-builds/testfunc-4b6b55336f5453685041-build.zip"
-        }
+          "s3Key": "amplify-builds/testfunc-6d4f566e4a3668494650-build.zip"
+        },
+        "infiniteLambda1": {
+          "deploymentBucketName": "amplify-skillsprintback-test-e017b-deployment",
+          "s3Key": "amplify-builds/infiniteLambda1-66437a534c344c57504f-build.zip"
+        },
+        "dbOperations": {}
       }
     }
   },

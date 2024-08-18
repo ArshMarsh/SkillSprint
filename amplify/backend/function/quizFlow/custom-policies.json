@@ -21,10 +21,15 @@
       "dynamodb:GetItem",
       "dynamodb:Query",
       "dynamodb:UpdateItem",
-      "dynamodb:DeleteItem"
+      "dynamodb:DeleteItem",
+      "dynamodb:Scan"
     ],
     "Resource": [
       "arn:aws:dynamodb:*:*:table/*"
     ]
+  },
+  {
+    "Action": ["lambda:InvokeFunction"],
+    "Resource": ["arn:aws:lambda:*:*:function:*"]
   }
 ]

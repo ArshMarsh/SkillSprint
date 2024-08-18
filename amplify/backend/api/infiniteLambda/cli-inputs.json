@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": {
+    "/dbfetch": {
+      "name": "/dbfetch",
+      "lambdaFunction": "infiniteLambda",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

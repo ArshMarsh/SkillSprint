@@ -14,7 +14,7 @@
       "providerPlugin": "awscloudformation",
       "service": "API Gateway"
     },
-    "quizFlow": {
+    "dbOp": {
       "dependsOn": [
         {
           "attributes": [
@@ -22,7 +22,37 @@
             "Arn"
           ],
           "category": "function",
-          "resourceName": "quizFlow"
+          "resourceName": "dbOperations"
+        },
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "quizflowFront"
+        },
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "dbResume"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    },
+    "infiniteLambda": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "infiniteLambda"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -44,7 +74,38 @@
     }
   },
   "function": {
+    "dbOperations": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "dbResume": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "infiniteLambda": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "infiniteLambda1"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "skillsprintbackinfiniteLayer"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "infiniteLambda1": {
       "build": true,
       "dependsOn": [
         {
@@ -63,6 +124,11 @@
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
+    "quizflowFront": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "skillsprintbackinfiniteLayer": {
       "build": true,
       "providerPlugin": "awscloudformation",
@@ -75,6 +141,38 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_dbOperations_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "dbOperations"
+        }
+      ]
+    },
+    "AMPLIFY_function_dbOperations_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "dbOperations"
+        }
+      ]
+    },
+    "AMPLIFY_function_infiniteLambda1_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda1"
+        }
+      ]
+    },
+    "AMPLIFY_function_infiniteLambda1_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "infiniteLambda1"
+        }
+      ]
+    },
     "AMPLIFY_function_infiniteLambda_deploymentBucketName": {
       "usedBy": [
         {

@@ -1,14 +1,20 @@
+import time
+import random
 import boto3
 import json
 import logging
 import re
 import uuid
+from botocore.exceptions import ClientError
 
-# Set up logger
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]')
+
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d in %(funcName)s]'
+)
+
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -17,19 +23,23 @@ logger.addHandler(console_handler)
 PROMPT_SKELETON = """
     <TASK>
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
+make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
+Make the roadmap as practical as possible
 <TASK/>
 
 <INPUT>
-skillName (string): The name of the skill the user wants to learn.
+title (string): The name of the skill the user wants to learn.
 goal (string): The objective the user hopes to achieve after completing the learning roadmap.
 currentSkillLevel (string): The user's initial proficiency in the skill.
 desiredSkillLevel (string): The proficiency level the user aims to reach.
 estimatedLearningDuration (string): The expected time to complete the learning path.
+dailyTime (string): the amount of daily time the user is going to be spending on learning this skill.
 <INPUT/>
 
 <OUTPUT>
-title: The title of the learning roadmap taken from INPUT (Dont includes "learning path" in "Roadmap" in this title)
+title: The title of the learning roadmap.(no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
 description:  A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
+searchKeyword: a search keyword that would provide a generic overview of the whole roadmap.
 imageURL: A URL linking to an image online that can be used as the cover for this learning roadmap.
 phases: Array of objects. Each object represents a phase in the learning roadmap. Atleast 4.
 phaseDescription: Describes what the phase entails.
@@ -66,10 +76,11 @@ You are required to generate 4-5 infobits for each topicOutline.
 Each infobit should include a short text explaining the topic outline, 
 along with relevant keywords extracted from this text. Additionally, 
 optionally add an example in each infobit wherever an example would help explaining the infobit.
+make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
 <TASK/>
 
 <INPUT>
-title: The title of the learning roadmap. (Dont includes "learning path" in "Roadmap" in this title)
+title: The title of the learning roadmap. 
 description:  A detailed description explaining the content covered in the roadmap
 goal (string): The objective the user hopes to achieve after completing the learning roadmap.
 currentSkillLevel (string): The user's initial proficiency in the skill.
@@ -86,6 +97,7 @@ phases: Array of objects. Each object represents a phase in the learning roadmap
 phaseDescription: Describes what the phase entails.
 topics: Array of objects. Each object represents a topic within the phase. Use original input structure
 topicName:  The name of the topic.
+topicSearchTerm: The search term for google and youtube that gives relevant results for this topic. it should be concise, specific to the topic, and comprehensive. it should have minimum of 2 words and maximum of 5 words.
 infoBits: Array of objects. Each object represents an infobit for the topic.
 text: A string containing information or an explanation about the topic, derived from the topic outline.
 keywords: Array of strings, comprising keywords extracted from the text. Maximum 5 keywords.
@@ -96,6 +108,7 @@ example: Optional string, providing an example to better explain the content in 
       "phaseDescription": string,
       "topics": [{
           "topicName": string,
+          "topicSearchTerm" : string,
           "infoBits": [
             "text": string
             "keywords" :string[]
@@ -126,7 +139,7 @@ PROMPT_QUIZ = """
     <TASK/>
 
     <INPUT>
-    skillName: The name of the skill the user wants to learn.
+    title: The name of the skill the user wants to learn.
     goal: The objective the user hopes to achieve after completing the learning roadmap.
     currentSkillLevel: The user's initial proficiency in the skill.
     desiredSkillLevel: The proficiency level the user aims to reach.
@@ -203,6 +216,7 @@ PROMPT_QUIZ_LAST = """
     phaseDescription: A summary of what each phase covers and how it contributes to the overall learning objectives.
     topics: Array of objects representing individual topics within each phase.
     topicName: The title or name of the topic covered in the phase.
+    topicSearchTerm: The search term for google and youtube that gives relevant results for this topic.
     topicOutline: Array of strings outlining the key points and details included in the topic.
     infoBits: Array of objects providing detailed pieces of information for each topic.
     text: A brief explanation or description of a specific aspect of the topic.
@@ -219,8 +233,8 @@ PROMPT_QUIZ_LAST = """
     quizzes: An array of quiz objects. each quiz object contains elements of a single quiz question. 
     text: The actual quiz question to test the user's understanding of the topic.
     type: The type of quiz question (e.g., multiple-choice, true-false).
-    options: Array of strings providing possible answers for multiple-choice questions.
-    answer: The correct answer to the quiz question.
+    options: Array of strings providing possible answers for multiple-choice questions. only one option should be correct.
+    answer: The correct answer to the quiz question. only one answer is correct.
 
     <JSON_Structure>
      {
@@ -241,7 +255,44 @@ PROMPT_QUIZ_LAST = """
     Only return a valid JSON, with proper delimitors and characters. Use proper ',' delimiters when making multiple objects within an array. use double quotes
     <IMPORTANT/>
     """
+    
+PROMPT_PERSONALIZE = """
+<TASK>
+You are an educational content creator. you will be given the roadmap that a user will be using to learn a skill, and the users background.
+your job is to remake the examples in the infobits so it personalizes it to the user's information while being relavent to the topic. this persoanlized example should be closely related to the user's information.
+you will be given a phase in the roadmap.
+<TASK/>
+<INPUT>
+    title: The name of the skill the user wants to learn.
+    goal: The objective the user hopes to achieve after completing the learning roadmap.
+    currentSkillLevel: The user's initial proficiency in the skill.
+    desiredSkillLevel: The proficiency level the user aims to reach.
+    estimatedLearningDuration: The expected time to complete the learning path.
+    phaseDescription: Describes what the phase entails.
+    topics: Array of objects. Each object represents a topic within the phase. 
+    topicName:  The name of the topic.
+    infoBits: Array of objects. Each object represents an infobit for the topic.
+    text: A string containing information or an explanation about the topic.
+    keywords: Array of strings, comprising keywords extracted from the text.
+    example:  string, providing an example to better explain the content in the text.
+<INPUT/>
+<OUTPUT>
+examples: an array of personalized and revised examples in the same infobit order provided in the input
 
+<JSON_Structure>
+{
+    [
+    "exmaple",
+    "example"
+    ]
+}
+<JSON_Structure/>
+<OUTPUT/>
+
+<IMPORTANT>
+Only return a valid JSON. use double quotes.
+<IMPORTANT/>
+    """
 #Claude gives misformatted JSON if Response Character count goes upto 19000
 region_name = 'eu-central-1'  
 def handler(event, context):
@@ -253,8 +304,11 @@ def handler(event, context):
         
         dynamodb = boto3.resource('dynamodb', region_name=region_name)
 
+        data = json.loads(event['body'])
+        user_id = data['userId']
 
-        input_data = json.loads(event['body'])
+        input_data = {key: value for key, value in data.items() if key != "userId"}
+
         
         roadmap_skeleton = sonnect_api_call(bedrock, PROMPT_SKELETON, input_data)
         phase_count = len(roadmap_skeleton['phases'])
@@ -289,16 +343,15 @@ def handler(event, context):
             'goal': input_data['goal'],
             'currentSkillLevel': input_data['currentSkillLevel'],
             'desiredSkillLevel': input_data['desiredSkillLevel'],
-            'currentLesson': 1,
-            'currentPhase': 1,
-            'dailyTime': input_data['desiredSkillLevel'],
+            'dailyTime': input_data['dailyTime'],
+            'searchKeyword' : roadmap_skeleton['searchKeyword'],
             'phases': phases,
         }
         
         enhanced_roadmap = enhance_roadmap(appended_roadmap)
         for phase in enhanced_roadmap['phases']:
             input_quiz = {
-                'skillName': input_data['skillName'],
+                'title': enhanced_roadmap['title'],
                 'goal': input_data['goal'],
                 'currentSkillLevel': input_data['currentSkillLevel'],
                 'desiredSkillLevel': input_data['desiredSkillLevel'],
@@ -318,7 +371,7 @@ def handler(event, context):
         
         last_quiz = sonnect_api_call(bedrock, PROMPT_QUIZ_LAST, enhanced_roadmap)
         final_phase = {
-                "phaseDescription": "Final Assessment: A comprehensive test covering all topics and phases.",
+                "phaseDescription": "final",
                 "phaseNumber": len(enhanced_roadmap['phases']) + 1,
                 "topicCount": len(last_quiz['quizzes']),
                 "topics": []
@@ -326,7 +379,8 @@ def handler(event, context):
             
         final_topic = {
             "topicName": "Final Comprehensive Quiz",
-            "topicNumber": "1",
+            "topicNumber": 1,
+            "topicSearchTerm" : "python programming tutorial",
             "infobitCount": len(last_quiz['quizzes']),
             "infoBits": []
         }
@@ -344,15 +398,17 @@ def handler(event, context):
         final_phase['topics'].append(final_topic)
         
         enhanced_roadmap['phases'].append(final_phase)
-                
-        logging.info("Final Roadmap Generated Successfully")
-        
-        save_roadmap(enhanced_roadmap, dynamodb)
 
-        return {
-            'statusCode': 200,
-            'body': enhanced_roadmap
-        }
+        logging.info("Roadmap with quizzes generated successfully")
+        
+        lambda_response = invoke_next_lambda(enhanced_roadmap)
+        if int(lambda_response['statusCode']) == 200:
+            #save roadmap to DB
+            save_roadmap(json.loads(lambda_response['body']), user_id, dynamodb)
+            logging.info("Final Roadmap Generated Successfully")
+
+        #error invoked
+        return lambda_response
 
     except Exception as e:
         logger.error(f"Error: While generating roadmap: {str(e)}")
@@ -363,8 +419,9 @@ def handler(event, context):
 
         
 def sonnect_api_call(bedrock, prompt, input_data):
-    try:
-        request_body = {
+    max_retries = 10
+    retry_attempts = 0
+    request_body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 300000,
             "messages": [
@@ -376,29 +433,46 @@ def sonnect_api_call(bedrock, prompt, input_data):
             "temperature": 0.2,
             "top_p": 0.9,
         }
-        
-        # Invoke the model
-        response = bedrock.invoke_model(
-            body=json.dumps(request_body),
-            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
-            contentType="application/json",
-            accept="application/json"
-        )
-        
-        # Parse and return the response
-        response_body = json.loads(response['body'].read())
-        response_content = response_body['content'][0]['text']
-        
+    while retry_attempts < max_retries:
         try:
-            result = json.loads(response_content)
-        except Exception as e:
-            result = extract_json(response_content)
+            # Invoke the model
+            response = bedrock.invoke_model(
+                body=json.dumps(request_body),
+                modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+                contentType="application/json",
+                accept="application/json"
+            )
             
-        return result
-    
-    except Exception as e:
-        logger.error(f"Error: While making API call to AI: {str(e)}")
-        raise 
+            # Parse and return the response
+            response_body = json.loads(response['body'].read())
+            response_content = response_body['content'][0]['text']
+            
+            try:
+                result = json.loads(response_content)
+            except Exception as e:
+                result = extract_json(response_content)
+                
+            return result
+        
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+
+            if error_code == 'ThrottlingException' or error_code == 'InternalServerException':
+                retry_attempts += 1
+                wait_time = 2 ** retry_attempts + random.uniform(0, 1)
+                if retry_attempts > 5 :
+                    wait_time = 30.2
+
+                logger.error(f"Throttling. Retry attempt {retry_attempts}. "
+                             f"Waiting {wait_time:.2f}")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"Error: While making API call to AI: {str(e)}")
+                raise e
+        except Exception as e:
+            logger.error(f"Error: While making API call to AI: {str(e)}")
+            raise 
+    raise Exception("Max retries reached. ThrottlingException persists.")
     
 def extract_json(response):
     try:
@@ -466,7 +540,7 @@ def enhance_roadmap(json_input):
         logger.error(f"Error: While adding phase counts to roadmap: {str(ex)}")
         raise
 
-def save_roadmap(enhanced_roadmap, dynamodb):
+def save_roadmap(enhanced_roadmap, user_id, dynamodb):
     try:
         roadmap_id = str(uuid.uuid4())
 
@@ -481,9 +555,9 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                 'goal': enhanced_roadmap['goal'],
                 'currentSkillLevel': enhanced_roadmap['currentSkillLevel'],
                 'desiredSkillLevel': enhanced_roadmap['desiredSkillLevel'],
-                'currentLesson': enhanced_roadmap['currentLesson'],
-                'currentPhase': enhanced_roadmap['currentPhase'],
                 'dailyTime': enhanced_roadmap['dailyTime'],
+                'phaseCount': enhanced_roadmap['phaseCount'],
+                'totalLessons': enhanced_roadmap['totalLessons']
             }
         )
 
@@ -495,7 +569,8 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                     'roadmapId': roadmap_id,
                     'phaseNumber': phase_index + 1,
                     'phaseId': phase_id,
-                    'phaseDescription': phase['phaseDescription']
+                    'phaseDescription': phase['phaseDescription'],
+                    'topicCount': phase['topicCount']
                 }
             )
 
@@ -505,10 +580,11 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                 dynamodb.Table('Topics').put_item(
                     Item={
                         'phaseId': phase_id,
-                        'topicNumber': topic_index + 1,
+                        'topicNumber': int(topic['topicNumber']),
                         'topicId': topic_id,
                         'topicName': topic['topicName'],
-                        'topicOutline': topic.get('topicOutline', [])
+                        'searchResult': topic['searchResult'],
+                        'infobitCount' : topic['infobitCount']
                     }
                 )
 
@@ -538,7 +614,62 @@ def save_roadmap(enhanced_roadmap, dynamodb):
                             'answer': quiz['answer']
                         }
                     )
+            
         logging.info("Roadmap saved to DB successfully")
-
+        save_user_roadmap(user_id, roadmap_id, dynamodb)
     except Exception as e:
-        logger.error(f"Error: While saving to DB: {str(e)}")
+        logging.error(f"Error saving to db: {str(e)}")
+
+
+def save_user_roadmap(user_id, roadmap_id, dynamodb):
+    try:
+        dynamodb.Table('UserRoadmaps').put_item(
+            Item={
+                'userId': user_id,
+                'roadmapId': roadmap_id,
+                'status': 'ongoing',
+                'currentLesson' : "1",
+                'currentPhase' : "1",
+                'quizAnswers': {}  # Default empty map
+            }
+        )
+        logging.info(f"User {user_id} associated with roadmap {roadmap_id} successfully.")
+    except Exception as e:
+        logging.error(f"Error saving user-roadmap association: {str(e)}")
+
+
+
+def invoke_next_lambda(lambda_input):    
+    try:
+        client = boto3.client('lambda')
+        
+        response = client.invoke(
+            FunctionName='infiniteLambda' + "-frontend", 
+            InvocationType='RequestResponse',
+            Payload=json.dumps({
+                'body': json.dumps(lambda_input)
+            })
+        )
+        logger.info(f"Next Lambda payload: {response}")
+
+    
+        if 'Payload' in response:
+            response_payload = json.loads(response['Payload'].read())
+        else:
+            response_payload = response 
+
+        logger.info(f"Next Lambda response: {response_payload}")
+
+        return response_payload
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+
+
+
+
+
+            
+           
