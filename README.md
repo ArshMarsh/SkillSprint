@@ -1,4 +1,3 @@
-Here’s a practical README file for setting up and deploying the backend environment for the `skillsprint` project. You can copy and paste this into your GitHub repository:
 
 ```markdown
 # Skillsprint Backend Setup
