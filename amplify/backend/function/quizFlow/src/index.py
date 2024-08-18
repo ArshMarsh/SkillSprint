@@ -39,6 +39,7 @@ dailyTime (string): the amount of daily time the user is going to be spending on
 <OUTPUT>
 title: The title of the learning roadmap.(no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
 description:  A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
+coverPhotoSearchTerm: a search term for google images that will be used to get cover photos for this roadmap. 
 imageURL: A URL linking to an image online that can be used as the cover for this learning roadmap.
 phases: Array of objects. Each object represents a phase in the learning roadmap. Atleast 4.
 phaseDescription: Describes what the phase entails.
@@ -232,8 +233,8 @@ PROMPT_QUIZ_LAST = """
     quizzes: An array of quiz objects. each quiz object contains elements of a single quiz question. 
     text: The actual quiz question to test the user's understanding of the topic.
     type: The type of quiz question (e.g., multiple-choice, true-false).
-    options: Array of strings providing possible answers for multiple-choice questions.
-    answer: The correct answer to the quiz question.
+    options: Array of strings providing possible answers for multiple-choice questions. only one option should be correct.
+    answer: The correct answer to the quiz question. only one answer is correct.
 
     <JSON_Structure>
      {
@@ -306,6 +307,7 @@ def handler(event, context):
             'currentSkillLevel': input_data['currentSkillLevel'],
             'desiredSkillLevel': input_data['desiredSkillLevel'],
             'dailyTime': input_data['dailyTime'],
+            'coverPhotoSearchTerm' : roadmap_skeleton['coverPhotoSearchTerm'],
             'phases': phases,
         }
         

@@ -210,7 +210,6 @@ def get_roadmap(roadmap_id, dynamodb):
         roadmap = roadmap_response.get('Item')
         if not roadmap:
             raise ValueError(f"Roadmap with ID {roadmap_id} not found.")
-
         original_object = {
             'id' : roadmap_id,
             'title': roadmap['title'],
@@ -572,7 +571,7 @@ def fetch_all_user_roadmaps(user_id, dynamodb):
 
             roadmap_response = dynamodb.Table('Roadmaps').get_item(
                 Key={'id': roadmap_id},
-                ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, dailyTime, totalLessons'
+                ProjectionExpression='id, title, description, imageURL, estimatedLearningDuration, goal, currentSkillLevel, desiredSkillLevel, dailyTime, totalLessons, phaseCount'
             )
             roadmap = roadmap_response.get('Item')
 
@@ -590,7 +589,8 @@ def fetch_all_user_roadmaps(user_id, dynamodb):
                     'currentPhase': user_roadmap['currentPhase'],
                     'dailyTime': roadmap['dailyTime'],
                     'totalLessons': roadmap['totalLessons'],
-                    'status': user_roadmap['status']
+                    'status': user_roadmap['status'],
+                    'phaseCount': roadmap['phaseCount']
                 })
 
         logging.info(f"Fetched {len(roadmap_details)} roadmaps for user {user_id}.")

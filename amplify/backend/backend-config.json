@@ -31,6 +31,14 @@
           ],
           "category": "function",
           "resourceName": "quizflowFront"
+        },
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "dbResume"
         }
       ],
       "providerPlugin": "awscloudformation",

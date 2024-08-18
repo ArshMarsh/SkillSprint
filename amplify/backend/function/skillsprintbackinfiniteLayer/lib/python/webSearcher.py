@@ -33,7 +33,7 @@ def search_resources(search_query):
 def process_topics(input_data):
     image_url = None
     try:
-        image_url = image_search(str(input_data['title']))
+        image_url = image_search(str(input_data['coverPhotoSearchTerm']))
     except Exception as e:
         print("error in image search")
         
@@ -76,3 +76,5 @@ def image_search(query):
     if 'items' in res:
         return res['items'][0]['link']
     return None
+
+print(image_search("python tutorial"))
