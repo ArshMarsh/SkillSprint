@@ -69,7 +69,7 @@ def invoke_next_lambda(lambda_input):
         client = boto3.client('lambda')
         
         response = client.invoke(
-            FunctionName='infiniteLambda' + "-test", 
+            FunctionName='infiniteLambda' + "-frontend", 
             InvocationType='RequestResponse',
             Payload=json.dumps({
                 'body': json.dumps(lambda_input)
