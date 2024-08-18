@@ -7,11 +7,14 @@ import re
 import uuid
 from botocore.exceptions import ClientError
 
-# Set up logger
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]')
+
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d in %(funcName)s]'
+)
+
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -22,7 +25,6 @@ PROMPT_SKELETON = """
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
 make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
 Make the roadmap as practical as possible
-
 <TASK/>
 
 <INPUT>
@@ -603,7 +605,7 @@ def invoke_next_lambda(lambda_input):
         client = boto3.client('lambda')
         
         response = client.invoke(
-            FunctionName='infiniteLambda' + "-test", 
+            FunctionName='infiniteLambda' + "-frontend", 
             InvocationType='RequestResponse',
             Payload=json.dumps({
                 'body': json.dumps(lambda_input)
