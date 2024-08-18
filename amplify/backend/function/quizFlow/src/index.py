@@ -255,7 +255,44 @@ PROMPT_QUIZ_LAST = """
     Only return a valid JSON, with proper delimitors and characters. Use proper ',' delimiters when making multiple objects within an array. use double quotes
     <IMPORTANT/>
     """
+    
+PROMPT_PERSONALIZE = """
+<TASK>
+You are an educational content creator. you will be given the roadmap that a user will be using to learn a skill, and the users background.
+your job is to remake the examples in the infobits so it personalizes it to the user's information while being relavent to the topic. this persoanlized example should be closely related to the user's information.
+you will be given a phase in the roadmap.
+<TASK/>
+<INPUT>
+    title: The name of the skill the user wants to learn.
+    goal: The objective the user hopes to achieve after completing the learning roadmap.
+    currentSkillLevel: The user's initial proficiency in the skill.
+    desiredSkillLevel: The proficiency level the user aims to reach.
+    estimatedLearningDuration: The expected time to complete the learning path.
+    phaseDescription: Describes what the phase entails.
+    topics: Array of objects. Each object represents a topic within the phase. 
+    topicName:  The name of the topic.
+    infoBits: Array of objects. Each object represents an infobit for the topic.
+    text: A string containing information or an explanation about the topic.
+    keywords: Array of strings, comprising keywords extracted from the text.
+    example:  string, providing an example to better explain the content in the text.
+<INPUT/>
+<OUTPUT>
+examples: an array of personalized and revised examples in the same infobit order provided in the input
 
+<JSON_Structure>
+{
+    [
+    "exmaple",
+    "example"
+    ]
+}
+<JSON_Structure/>
+<OUTPUT/>
+
+<IMPORTANT>
+Only return a valid JSON. use double quotes.
+<IMPORTANT/>
+    """
 #Claude gives misformatted JSON if Response Character count goes upto 19000
 region_name = 'eu-central-1'  
 def handler(event, context):
@@ -632,39 +669,7 @@ def invoke_next_lambda(lambda_input):
 
 
 
-PROMPT_PERSONALIZE = """
-<TASK>
-You are an educational content creator. you will be given the roadmap that a user will be using to learn a skill, and the users background.
-your job is to remake the examples in the infobits so it personalizes it to the user's information. you will be given a phase in the roadmap.
-<TASK/>
-<INPUT>
-    title: The name of the skill the user wants to learn.
-    goal: The objective the user hopes to achieve after completing the learning roadmap.
-    currentSkillLevel: The user's initial proficiency in the skill.
-    desiredSkillLevel: The proficiency level the user aims to reach.
-    estimatedLearningDuration: The expected time to complete the learning path.
-    phaseDescription: Describes what the phase entails.
-    topics: Array of objects. Each object represents a topic within the phase. 
-    topicName:  The name of the topic.
-    infoBits: Array of objects. Each object represents an infobit for the topic.
-    text: A string containing information or an explanation about the topic.
-    keywords: Array of strings, comprising keywords extracted from the text.
-    example:  string, providing an example to better explain the content in the text.
-<INPUT/>
-<OUTPUT>
-examples: an array of personalized and revised examples in the same infobit order provided in the input
 
-<JSON_Structure>
-{
-    [
-    "exmaple",
-    "example"
-    ]
-}
-<JSON_Structure/>
-<OUTPUT/>
 
-<IMPORTANT>
-Only return a valid JSON. use double quotes.
-<IMPORTANT/>
-    """"""
+            
+           
