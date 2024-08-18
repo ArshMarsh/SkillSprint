@@ -21,6 +21,8 @@ PROMPT_SKELETON = """
     <TASK>
 You are an education expert tasked with designing a personalized learning path to help users achieve specific skills. Based on user input, create a structured learning roadmap that progressively builds knowledge and complexity, guiding the user from their current skill level to their desired skill level and ultimately achieving their specified goal.
 make sure to take account the current skill level of the user and avoid giving redundant for users who already have a prior proficiency.
+Make the roadmap as practical as possible
+
 <TASK/>
 
 <INPUT>

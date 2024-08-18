@@ -75,7 +75,7 @@ def handler(event, context):
                 else:
                     return {
                         'statusCode': 404,
-                        'body': json.dumps({'error': 'User roadmaps not found'}),
+                        'body': '',
                         'headers': {
                             'Content-Type': 'application/json',
                             'Access-Control-Allow-Origin': '*'

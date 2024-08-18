@@ -1,11 +1,14 @@
 
 import boto3
+import json
 def handler(event, context):
     try:
+        
+
         client = boto3.client('lambda')
             
         response = client.invoke(
-            FunctionName= "quizflow-frontend", 
+            FunctionName= "quizFlow-frontend", 
             InvocationType='Event',
             Payload=json.dumps({
                 'body': event['body']

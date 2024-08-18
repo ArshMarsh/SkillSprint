@@ -1,6 +1,7 @@
 from googlesearch import search
 from youtubesearchpython import VideosSearch
 from requests.exceptions import HTTPError
+from googleapiclient.discovery import build
 
 #TODO sort order and search quality
 def search_resources(search_query):
@@ -27,9 +28,12 @@ def search_resources(search_query):
         return search_resources(search_query)
     except Exception as e: 
         raise
+
+
+def process_topics(input_data):
     
-def process_topics(phases):
-    for phase in phases:
+    input_data['imageURL'] = image_search(str(input_data['title']))
+    for phase in input_data["phases"]:
         for topic in phase['topics']:
             if 'searchResult' not in topic:
                 try:
@@ -44,3 +48,24 @@ def process_topics(phases):
                 except Exception as e:
                     raise
     return True  
+
+
+def image_search(query):
+    api_key = 'AIzaSyD_GRf-U7E8uZPIvpz7ZpdsDYIO8FxJZcg'
+    search_engine_id = '367c6bc9f286f4ed7'
+
+    # Build the service
+    service = build('customsearch', 'v1', developerKey=api_key)
+
+    # Perform the search
+    res = service.cse().list(
+        q=query,
+        cx=search_engine_id,
+        searchType='image',
+        num=1  # Get only the first result
+    ).execute()
+
+    # Extract the first image URL
+    if 'items' in res:
+        return res['items'][0]['link']
+    return None

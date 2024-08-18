@@ -71,6 +71,11 @@
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
+    "dbResume": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "infiniteLambda": {
       "build": true,
       "dependsOn": [
