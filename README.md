@@ -1,5 +1,5 @@
 
-```markdown
+
 # Skillsprint Backend Setup
 
 This guide will help you set up and deploy the backend environment for the Skillsprint project. Follow these steps to clone the repository, configure AWS resources, and deploy the backend using AWS Amplify.
