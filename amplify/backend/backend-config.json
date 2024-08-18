@@ -119,6 +119,11 @@
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
+    "knowledgebase": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "quizFlow": {
       "build": true,
       "providerPlugin": "awscloudformation",

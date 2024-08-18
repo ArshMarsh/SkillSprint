@@ -38,7 +38,8 @@
           "s3Key": "amplify-builds/testfunc-6d4f566e4a3668494650-build.zip"
         },
         "quizflowFront": {},
-        "dbResume": {}
+        "dbResume": {},
+        "knowledgebase": {}
       }
     }
   },
