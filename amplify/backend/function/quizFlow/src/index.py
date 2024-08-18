@@ -344,7 +344,7 @@ def handler(event, context):
             'currentSkillLevel': input_data['currentSkillLevel'],
             'desiredSkillLevel': input_data['desiredSkillLevel'],
             'dailyTime': input_data['dailyTime'],
-            'coverPhotoSearchTerm' : roadmap_skeleton['coverPhotoSearchTerm'],
+            'searchKeyword' : roadmap_skeleton['searchKeyword'],
             'phases': phases,
         }
         
