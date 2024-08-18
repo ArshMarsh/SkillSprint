@@ -53,7 +53,7 @@ def handler(event, context):
             'body': json.dumps(lambda_input["inputData"])
         }
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}", exc_info=True)
         return {
             'statusCode': 500,
             'body': json.dumps({

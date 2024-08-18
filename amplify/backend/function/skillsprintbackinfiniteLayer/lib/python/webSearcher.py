@@ -33,7 +33,7 @@ def search_resources(search_query):
 def process_topics(input_data):
     image_url = image_search(str(input_data['title']))
     if image_url != None:
-        input_data['imageURL'] = image_search(str(input_data['title']))
+        input_data['imageURL'] = image_url
 
     for phase in input_data["phases"]:
         for topic in phase['topics']:
