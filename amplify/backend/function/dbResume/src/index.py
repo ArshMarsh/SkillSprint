@@ -21,7 +21,7 @@ logger.addHandler(console_handler)
 
 dynamodb = boto3.resource('dynamodb')
 def handler(event, context):
-   try:
+    try:
         user_id = event['pathParameters']['userId']
         
         if event['httpMethod'] == 'GET':

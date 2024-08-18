@@ -39,7 +39,7 @@ dailyTime (string): the amount of daily time the user is going to be spending on
 <OUTPUT>
 title: The title of the learning roadmap.(no "learning path" and "Roadmap" in this title). remove any learning path or roadmap equivalent in the title.
 description:  A detailed description explaining the content covered in phases of this roadmap and what the user will learn by following it. Limited to three sentences.
-coverPhotoSearchTerm: a search term for google images that will be used to get cover photos for this roadmap. 
+searchKeyword: a search keyword that would provide a generic overview of the whole roadmap.
 imageURL: A URL linking to an image online that can be used as the cover for this learning roadmap.
 phases: Array of objects. Each object represents a phase in the learning roadmap. Atleast 4.
 phaseDescription: Describes what the phase entails.
@@ -629,3 +629,42 @@ def invoke_next_lambda(lambda_input):
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
+
+
+
+PROMPT_PERSONALIZE = """
+<TASK>
+You are an educational content creator. you will be given the roadmap that a user will be using to learn a skill, and the users background.
+your job is to remake the examples in the infobits so it personalizes it to the user's information. you will be given a phase in the roadmap.
+<TASK/>
+<INPUT>
+    title: The name of the skill the user wants to learn.
+    goal: The objective the user hopes to achieve after completing the learning roadmap.
+    currentSkillLevel: The user's initial proficiency in the skill.
+    desiredSkillLevel: The proficiency level the user aims to reach.
+    estimatedLearningDuration: The expected time to complete the learning path.
+    phaseDescription: Describes what the phase entails.
+    topics: Array of objects. Each object represents a topic within the phase. 
+    topicName:  The name of the topic.
+    infoBits: Array of objects. Each object represents an infobit for the topic.
+    text: A string containing information or an explanation about the topic.
+    keywords: Array of strings, comprising keywords extracted from the text.
+    example:  string, providing an example to better explain the content in the text.
+<INPUT/>
+<OUTPUT>
+examples: an array of personalized and revised examples in the same infobit order provided in the input
+
+<JSON_Structure>
+{
+    [
+    "exmaple",
+    "example"
+    ]
+}
+<JSON_Structure/>
+<OUTPUT/>
+
+<IMPORTANT>
+Only return a valid JSON. use double quotes.
+<IMPORTANT/>
+    """"""

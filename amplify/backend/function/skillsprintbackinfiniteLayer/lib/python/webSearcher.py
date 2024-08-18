@@ -27,13 +27,17 @@ def search_resources(search_query):
         search_query = search_query + "tutorial"
         return search_resources(search_query)
     except Exception as e: 
-        raise
+        search_results = {
+            "webResult" : google_results,
+            "videoResult" : video_results
+        }
+        return search_results
 
 
 def process_topics(input_data):
     image_url = None
     try:
-        image_url = image_search(str(input_data['coverPhotoSearchTerm']) + "cover photo")
+        image_url = image_search(str(input_data['searchKeyword']) + "cover photo")
     except Exception as e:
         print("error in image search")
         
