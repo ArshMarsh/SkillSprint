@@ -55,9 +55,9 @@ def get_item_from_dynamodb(user_id):
         logger.error(f"Failed to get data from DynamoDB: {e}")
         return {"statusCode": 500, "body": "Internal Server Error: Failed to get data from DynamoDB."}
 
-def store_in_dynamodb(user_id, skill, text):
-    table = dynamodb.Table('UserRoadmaps')
-    def store_or_update_dynamodb_item(user_id, skills=None, text=None):
+
+table = dynamodb.Table('UserRoadmaps')
+def store_or_update_dynamodb_item(user_id, skills=None, text=None):
     try:
         existing_item = table.get_item(Key={'userId': user_id})
         
