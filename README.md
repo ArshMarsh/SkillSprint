@@ -1,4 +1,6 @@
-
+# Frontend and Demo
+Demo: https://www.youtube.com/watch?v=d4NBrPLczlQ
+Frontend: https://github.com/Atherrrrr/SkillSprint-ui
 
 # Skillsprint Backend Setup
 
